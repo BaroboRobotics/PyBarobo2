@@ -40,7 +40,7 @@ try:
         ext_package='linkbot',
         ext_modules=[Extension('_linkbot', 
           sources=['linkbot.i'],
-          swig_opts=['-c++'],
+          swig_opts=['-threads', '-c++'],
           include_dirs=[
             os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh', 'include'),
             os.path.join(origCWD, 'PyLinkbotWrapper', 'src'),

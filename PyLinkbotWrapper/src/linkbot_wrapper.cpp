@@ -4,9 +4,9 @@
 void _buttonEventCB(int buttonNo, barobo::ButtonState event, int timestamp, void* data)
 {
     _Linkbot *l = static_cast<_Linkbot*>(data);
-    //l->buttonEventCB(buttonNo, event, timestamp);
+    l->buttonEventCB(buttonNo, event, timestamp);
     //l->buttonEventCB(buttonNo, 0, timestamp);
-    l->testCB();
+
 }
 
 void _encoderEventCB(int jointNo, double anglePosition, int timestamp, void *data)
@@ -28,10 +28,19 @@ void _jointEventCB(int joint, barobo::JointState state, int timestamp, void *dat
 }
 
 _Linkbot::_Linkbot() : barobo::Linkbot("ABCD") 
-{}
+{
+}
 
 _Linkbot::_Linkbot(const std::string& serialId) : barobo::Linkbot(serialId)
-{}
+{
+    // Make sure the GIL has been created since we need to acquire it in our
+    // callback to safely call into the python application.
+    /*
+    if (! PyEval_ThreadsInitialized()) {
+        PyEval_InitThreads();
+    }
+    */
+}
 
 _Linkbot::~_Linkbot()
 {}
