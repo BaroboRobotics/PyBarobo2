@@ -53,6 +53,7 @@ class Linkbot(_Linkbot):
               (self._jointStates.state(1) == L.JOINT_MOVING) and \
               (self._jointStates.state(2) == L.JOINT_MOVING) :
             self._jointStates.wait()
+        self._jointStates.unlock()
 
     # CALLBACKS
 
