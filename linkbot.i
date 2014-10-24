@@ -1,7 +1,9 @@
-%module _linkbot
+%module(directors="1") linkbot
 %{
-    #include "baromesh/linkbot.hpp"
+    #include "PyLinkbotWrapper/src/linkbot_wrapper.hpp"
 %}
+
+%feature("director");
 
 /* Set up some exception handling */
 %include exception.i
@@ -14,26 +16,21 @@
     }
 }
 
-namespace barobo{
+namespace barobo {
 enum MotorDir {
     FORWARD,
     BACKWARD,
     NEUTRAL,
     HOLD
 };
+}
 
-class Linkbot {
+class _Linkbot {
 public:
-    explicit Linkbot (const std::string&);
+    _Linkbot(const std::string& serialId) : barobo::Linkbot(serialId) {}
+    _Linkbot(const char * serialId) : barobo::Linkbot(serialId) {}
+    ~_Linkbot() {}
     std::string serialId () const;
-
-    bool operator== (const Linkbot& that) const {
-      return this->serialId() == that.serialId();
-    }
-
-    bool operator!= (const Linkbot& that) const {
-        return !operator==(that);
-    }
 
     // All member functions may throw a barobo::Error exception on failure.
 
@@ -48,25 +45,23 @@ public:
     void getJointAngles (int& timestamp, double&, double&, double&, int=10);
     void getAccelerometer (int& timestamp, double&, double&, double&);
     void move (int mask, double, double, double);
-    void moveContinuous (int mask, MotorDir dir1, MotorDir dir2, MotorDir dir3);
+    void moveContinuous (int mask, barobo::MotorDir dir1, barobo::MotorDir dir2, barobo::MotorDir dir3);
     void moveTo (int mask, double, double, double);
-    void moveWait (int mask);
     void setLedColor (int, int, int);
-    void setJointEventThreshold (int, double);
+    void setEncoderEventThreshold (int, double);
     void setJointSpeeds (int mask, double, double, double);
     void stop ();
     void setBuzzerFrequencyOn (float);
     void getVersions (uint32_t&, uint32_t&, uint32_t&);
 
-    typedef void (*ButtonEventCallback)(int buttonNo, ButtonState event, void* userData);
-    // JointEventCallback's anglePosition parameter is reported in degrees.
-    typedef void (*JointEventCallback)(int jointNo, double anglePosition, void* userData);
-    typedef void (*AccelerometerEventCallback)(double x, double y, double z, void* userData);
+    void enableButtonEvent(bool enable=true);
+    void enableEncoderEvent(bool enable=true);
+    void enableAccelerometerEvent(bool enable=true);
+    void enableJointEvent(bool enable=true);
 
-    // Passing a null pointer as the first parameter of those three functions
-    // will disable its respective events.
-    void setButtonEventCallback (ButtonEventCallback, void* userData);
-    void setJointEventCallback (JointEventCallback, void* userData);
-    void setAccelerometerEventCallback (AccelerometerEventCallback, void* userData);
+    /* Override these */
+    virtual void buttonEventCB(int buttonNo, barobo::ButtonState state, int timestamp);
+    virtual void encoderEventCB(int joint, double angle, int timestamp);
+    virtual void accelerometerEventCB(double x, double y, double z, int timestamp);
+    virtual void jointEventCB(int joint, barobo::JointState state, int timestamp);
 };
-}
