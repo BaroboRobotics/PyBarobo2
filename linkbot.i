@@ -59,9 +59,12 @@ public:
     void enableAccelerometerEvent(bool enable=true);
     void enableJointEvent(bool enable=true);
 
+    void callTestCB();
+
     /* Override these */
     virtual void buttonEventCB(int buttonNo, barobo::ButtonState state, int timestamp);
     virtual void encoderEventCB(int joint, double angle, int timestamp);
     virtual void accelerometerEventCB(double x, double y, double z, int timestamp);
     virtual void jointEventCB(int joint, barobo::JointState state, int timestamp);
+    virtual void testCB();
 };

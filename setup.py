@@ -21,6 +21,7 @@ subprocess.check_call([
         '-G', 'Unix Makefiles', 
         '-DCMAKE_CXX_FLAGS=-fPIC', 
         '-DBUILD_SHARED_LIBS=OFF',
+        '-DCMAKE_BUILD_TYPE=Debug',
         projDir])
 subprocess.check_call(['make', 'VERBOSE=1'])
 
@@ -72,4 +73,4 @@ except Exception as e:
 #build_py.run()
 
 # Unlink temp directory
-# shutil.rmtree(tempdir)
+shutil.rmtree(tempdir)

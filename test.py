@@ -9,4 +9,6 @@ time.sleep(2)
 
 l.connect()
 
+l.enableEncoderEvent()
+
 l.move(0x07, 90, 90, 90)

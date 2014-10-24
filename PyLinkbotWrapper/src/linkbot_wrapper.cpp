@@ -1,9 +1,12 @@
+#include <iostream>
 #include "linkbot_wrapper.hpp"
 
 void _buttonEventCB(int buttonNo, barobo::ButtonState event, int timestamp, void* data)
 {
     _Linkbot *l = static_cast<_Linkbot*>(data);
-    l->buttonEventCB(buttonNo, event, timestamp);
+    //l->buttonEventCB(buttonNo, event, timestamp);
+    //l->buttonEventCB(buttonNo, 0, timestamp);
+    l->testCB();
 }
 
 void _encoderEventCB(int jointNo, double anglePosition, int timestamp, void *data)
@@ -69,6 +72,11 @@ void _Linkbot::enableJointEvent(bool enable)
     }
 }
 
+void _Linkbot::callTestCB()
+{
+    testCB();
+}
+
 void _Linkbot::buttonEventCB(int buttonNo, barobo::ButtonState state, int timestamp)
 {}
 
@@ -80,3 +88,8 @@ void _Linkbot::accelerometerEventCB(double x, double y, double z, int timestamp)
 
 void _Linkbot::jointEventCB(int joint, barobo::JointState state, int timestamp)
 {}
+
+void _Linkbot::testCB()
+{
+    std::cout << "Hello from C++ land." << std::endl;
+}
