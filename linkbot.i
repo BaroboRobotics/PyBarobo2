@@ -11,8 +11,8 @@
 %exception {
     try {
         $function
-    } catch(...) {
-        SWIG_exception(SWIG_RuntimeError, "An exception occured!");
+    } catch(std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
     }
 }
 
