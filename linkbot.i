@@ -23,6 +23,13 @@ enum MotorDir {
     NEUTRAL,
     HOLD
 };
+
+enum JointState {
+    JOINT_STOP,
+    JOINT_HOLD,
+    JOINT_MOVING,
+    JOINT_FAIL
+};
 }
 
 class _Linkbot {
