@@ -45,6 +45,13 @@ _Linkbot::_Linkbot(const std::string& serialId) : barobo::Linkbot(serialId)
 _Linkbot::~_Linkbot()
 {}
 
+void _Linkbot::formFactor(int & formFactor)
+{
+    barobo::FormFactor form;
+    getFormFactor(form);
+    formFactor = int(form);
+}
+
 void _Linkbot::enableButtonEvent(bool enable)
 {
     if(enable) {

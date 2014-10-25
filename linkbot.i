@@ -49,8 +49,9 @@ public:
     // movement functions.
     void drive (int mask, double, double, double);
     void driveTo (int mask, double, double, double);
-    void getJointAngles (int& timestamp, double&, double&, double&, int=10);
-    void getAccelerometer (int& timestamp, double&, double&, double&);
+    void formFactor(int&OUTPUT);
+    void getJointAngles (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT, int=10);
+    void getAccelerometer (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT);
     void move (int mask, double, double, double);
     void moveContinuous (int mask, barobo::MotorDir dir1, barobo::MotorDir dir2, barobo::MotorDir dir3);
     void moveTo (int mask, double, double, double);
@@ -59,7 +60,7 @@ public:
     void setJointSpeeds (int mask, double, double, double);
     void stop ();
     void setBuzzerFrequencyOn (float);
-    void getVersions (uint32_t&, uint32_t&, uint32_t&);
+    void getVersions (uint32_t&OUTPUT, uint32_t&OUTPUT, uint32_t&OUTPUT);
 
     void enableButtonEvent(bool enable=true);
     void enableEncoderEvent(bool enable=true);

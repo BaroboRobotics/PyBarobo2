@@ -14,6 +14,8 @@ public:
     _Linkbot(const std::string& serialId);
     virtual ~_Linkbot();
 
+    void formFactor(int & formFactor);
+
     void enableButtonEvent(bool enable=true);
     void enableEncoderEvent(bool enable=true);
     void enableAccelerometerEvent(bool enable=true);

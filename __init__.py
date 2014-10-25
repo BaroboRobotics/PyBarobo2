@@ -35,25 +35,33 @@ class Linkbot(_Linkbot):
                         'moveTo' ]
         for func in nbMoveFuncs:
             setattr(self, 
-                    func+'NB', 
+                    '_'+func+'NB', 
                     functools.partial( getattr(_Linkbot, func), self ) 
                    )
         time.sleep(2)
 
     def connect(self):
         # Enable joint event callbacks
+        _Linkbot.connect(self)
         self.enableJointEvent()
+        pass
 
     def move(self, j1, j2, j3):
         self._jointStates.lock()
         for i in range(3):
             self._jointStates.set_state(i, L.JOINT_MOVING)
-        self.moveNB(0x07, j1, j2, j3)
-        while (self._jointStates.state(0) == L.JOINT_MOVING) and \
-              (self._jointStates.state(1) == L.JOINT_MOVING) and \
+        self._moveNB(0x07, j1, j2, j3)
+        while (self._jointStates.state(0) == L.JOINT_MOVING) or \
+              (self._jointStates.state(1) == L.JOINT_MOVING) or \
               (self._jointStates.state(2) == L.JOINT_MOVING) :
             self._jointStates.wait()
         self._jointStates.unlock()
+
+    def moveNB(self, j1, j2, j3):
+        self._jointStates.lock()
+        for i in range(3):
+            self._jointStates.set_state(i, L.JOINT_MOVING)
+        
 
     # CALLBACKS
 
