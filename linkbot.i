@@ -51,6 +51,10 @@ public:
     void driveTo (int mask, double, double, double);
     void formFactor(int&OUTPUT);
     void getJointAngles (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT, int=10);
+    void getJointStates(int&OUTPUT, 
+                        int&OUTPUT, 
+                        int&OUTPUT, 
+                        int&OUTPUT);
     void getAccelerometer (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT);
     void move (int mask, double, double, double);
     void moveContinuous (int mask, barobo::MotorDir dir1, barobo::MotorDir dir2, barobo::MotorDir dir3);

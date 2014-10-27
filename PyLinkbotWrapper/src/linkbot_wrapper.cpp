@@ -88,6 +88,15 @@ void _Linkbot::enableJointEvent(bool enable)
     }
 }
 
+void _Linkbot::getJointStates(int &timestamp, int &j1, int &j2, int &j3)
+{
+    barobo::JointState states[3];
+    Linkbot::getJointStates(timestamp, states[0], states[1], states[2]);
+    j1 = int(states[0]);
+    j2 = int(states[1]);
+    j3 = int(states[2]);
+}
+
 void _Linkbot::callTestCB()
 {
     testCB();

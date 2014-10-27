@@ -23,7 +23,7 @@ subprocess.check_call([
         '-DBUILD_SHARED_LIBS=OFF',
         '-DCMAKE_BUILD_TYPE=Debug',
         projDir])
-subprocess.check_call(['make', 'VERBOSE=1'])
+subprocess.check_call(['make', 'linkbot_wrapper', 'VERBOSE=1'])
 
 #Go back to our original directory
 os.chdir(origCWD)

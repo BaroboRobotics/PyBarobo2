@@ -21,6 +21,8 @@ public:
     void enableAccelerometerEvent(bool enable=true);
     void enableJointEvent(bool enable=true);
 
+    void getJointStates(int &timestamp, int &j1, int &j2, int &j3);
+
     void callTestCB();
 
     /* Override these */

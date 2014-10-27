@@ -7,6 +7,11 @@ import threading
 import functools
 
 class Linkbot(_Linkbot):
+    class FormFactor:
+        I = 0
+        L = 1
+        T = 2
+
     class JointStates:
         def __init__(self):
             self._lock = threading.Condition()
@@ -44,24 +49,35 @@ class Linkbot(_Linkbot):
         # Enable joint event callbacks
         _Linkbot.connect(self)
         self.enableJointEvent()
-        pass
+        self._formFactor = self.formFactor()
+        if self._formFactor == Linkbot.FormFactor.I:
+            self._motorMask = 0x05
+        elif self._formFactor == Linkbot.FormFactor.L:
+            self._motorMask = 0x03
+        elif self._formFactor == Linkbot.FormFactor.T:
+            self._motorMask = 0x07
+        else:
+            self._motorMask = 0x01
 
     def move(self, j1, j2, j3):
-        self._jointStates.lock()
-        for i in range(3):
-            self._jointStates.set_state(i, L.JOINT_MOVING)
-        self._moveNB(0x07, j1, j2, j3)
-        while (self._jointStates.state(0) == L.JOINT_MOVING) or \
-              (self._jointStates.state(1) == L.JOINT_MOVING) or \
-              (self._jointStates.state(2) == L.JOINT_MOVING) :
-            self._jointStates.wait()
-        self._jointStates.unlock()
+        self.moveNB(j1, j2, j3)
+        self.moveWait()
 
     def moveNB(self, j1, j2, j3):
+        self._moveNB(0x07, j1, j2, j3)
+
+    def moveWait(self, mask = 0x07):
+        mask = mask & self._motorMask
         self._jointStates.lock()
+        states = self.getJointStates()[1:]
+        for s,i in zip(states, range(len(states))):
+            self._jointStates.set_state(i, s)
+
         for i in range(3):
-            self._jointStates.set_state(i, L.JOINT_MOVING)
-        
+            if (1<<i) & mask:
+                while self._jointStates.state(i) == L.JOINT_MOVING:
+                    self._jointStates.wait()
+        self._jointStates.unlock()
 
     # CALLBACKS
 
