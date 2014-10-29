@@ -37,7 +37,7 @@ public:
     _Linkbot(const std::string& serialId) : barobo::Linkbot(serialId) {}
     _Linkbot(const char * serialId) : barobo::Linkbot(serialId) {}
     ~_Linkbot() {}
-    std::string serialId () const;
+    // std::string serialId () const;
 
     // All member functions may throw a barobo::Error exception on failure.
 
@@ -47,6 +47,7 @@ public:
     // Member functions take angles in degrees.
     // All functions are non-blocking. Use moveWait() to wait for non-blocking
     // movement functions.
+    /*
     void drive (int mask, double, double, double);
     void driveTo (int mask, double, double, double);
     void formFactor(int&OUTPUT);
@@ -56,7 +57,9 @@ public:
                         int&OUTPUT, 
                         int&OUTPUT);
     void getAccelerometer (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT);
-    void move (int mask, double, double, double);
+    */
+    void moveNB (int mask, double, double, double);
+    /*
     void moveContinuous (int mask, barobo::MotorDir dir1, barobo::MotorDir dir2, barobo::MotorDir dir3);
     void moveTo (int mask, double, double, double);
     void setLedColor (int, int, int);
@@ -65,7 +68,7 @@ public:
     void stop ();
     void setBuzzerFrequencyOn (float);
     void getVersions (uint32_t&OUTPUT, uint32_t&OUTPUT, uint32_t&OUTPUT);
-
+    */
     void enableButtonEvent(bool enable=true);
     void enableEncoderEvent(bool enable=true);
     void enableAccelerometerEvent(bool enable=true);

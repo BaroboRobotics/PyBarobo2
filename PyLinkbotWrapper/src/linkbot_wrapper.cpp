@@ -1,6 +1,9 @@
 #include <iostream>
 #include "linkbot_wrapper.hpp"
 
+#define RUNTIME_ERROR \
+    std::runtime_error(std::string("Exception in ") + std::string(__func__))
+
 void _buttonEventCB(int buttonNo, barobo::ButtonState event, int timestamp, void* data)
 {
     _Linkbot *l = static_cast<_Linkbot*>(data);
@@ -27,11 +30,12 @@ void _jointEventCB(int joint, barobo::JointState state, int timestamp, void *dat
     l->jointEventCB(joint, state, timestamp);
 }
 
-_Linkbot::_Linkbot() : barobo::Linkbot("ABCD") 
+_Linkbot::_Linkbot()
 {
+    m = Linkbot_new("ABCD");
 }
 
-_Linkbot::_Linkbot(const std::string& serialId) : barobo::Linkbot(serialId)
+_Linkbot::_Linkbot(const std::string& serialId)
 {
     // Make sure the GIL has been created since we need to acquire it in our
     // callback to safely call into the python application.
@@ -40,54 +44,72 @@ _Linkbot::_Linkbot(const std::string& serialId) : barobo::Linkbot(serialId)
         PyEval_InitThreads();
     }
     */
+    m = Linkbot_new(serialId.c_str());
 }
 
 _Linkbot::~_Linkbot()
 {}
 
+/*
 void _Linkbot::formFactor(int & formFactor)
 {
     barobo::FormFactor form;
     getFormFactor(form);
     formFactor = int(form);
 }
+*/
+
+void _Linkbot::connect()
+{
+    if(Linkbot_connect(m)) {
+        throw RUNTIME_ERROR;
+    }
+}
+
+void _Linkbot::disconnect()
+{
+    if(Linkbot_disconnect(m)) {
+        throw RUNTIME_ERROR;
+    }
+}
 
 void _Linkbot::enableButtonEvent(bool enable)
 {
     if(enable) {
-        setButtonEventCallback(_buttonEventCB, this);
+        Linkbot_setButtonEventCallback(m, _buttonEventCB, this);
     } else {
-        setButtonEventCallback(nullptr, nullptr);
+        Linkbot_setButtonEventCallback(m, nullptr, nullptr);
     }
 }
 
 void _Linkbot::enableEncoderEvent(bool enable)
 {
     if(enable) {
-        setEncoderEventCallback(_encoderEventCB, this);
+        Linkbot_setEncoderEventCallback(m, _encoderEventCB, this);
     } else {
-        setEncoderEventCallback(nullptr, nullptr);
+        Linkbot_setEncoderEventCallback(m, nullptr, nullptr);
     }
 }
 
 void _Linkbot::enableAccelerometerEvent(bool enable)
 {
     if(enable) {
-        setAccelerometerEventCallback(_accelerometerEventCB, this);
+        Linkbot_setAccelerometerEventCallback(m, _accelerometerEventCB, this);
     } else {
-        setAccelerometerEventCallback(nullptr, nullptr);
+        Linkbot_setAccelerometerEventCallback(m, nullptr, nullptr);
     }
 }
 
 void _Linkbot::enableJointEvent(bool enable)
 {
     if(enable) {
-        setJointEventCallback(_jointEventCB, this);
+        Linkbot_setJointEventCallback(m, _jointEventCB, this);
     } else {
-        setJointEventCallback(nullptr, nullptr);
+        Linkbot_setJointEventCallback(m, nullptr, nullptr);
     }
 }
 
+/*
 void _Linkbot::getJointStates(int &timestamp, int &j1, int &j2, int &j3)
 {
     barobo::JointState states[3];
@@ -95,6 +117,14 @@ void _Linkbot::getJointStates(int &timestamp, int &j1, int &j2, int &j3)
     j1 = int(states[0]);
     j2 = int(states[1]);
     j3 = int(states[2]);
+}
+*/
+
+void _Linkbot::moveNB(int mask, double j1, double j2, double j3)
+{
+    if(Linkbot_move(m, mask, j1, j2, j3)) {
+        throw std::runtime_error(std::string("Exception in ") + std::string(__func__));
+    }
 }
 
 void _Linkbot::callTestCB()
