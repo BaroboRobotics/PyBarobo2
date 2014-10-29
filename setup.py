@@ -46,7 +46,7 @@ if platform.system() == 'Windows':
                 'dongle-interface',
                 'boost_log-mgw48-mt-d-1_56',
                 'boost_thread-mgw48-mt-d-1_56',
-                'boost_system-mgw48-mt-d-1_56'],
+                'boost_system-mgw48-mt-d-1_56']
 else:
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
@@ -66,10 +66,14 @@ else:
                 'dongle-interface',
                 'boost_log',
                 'boost_thread',
-                'boost_system'],
+                'boost_system']
 
 #Go back to our original directory
 os.chdir(origCWD)
+
+if os.environ['BOOST_ROOT'] is None:
+    print('Environment variable BOOST_ROOT is not declared. aborting...')
+    sys.exit(0)
 
 #dist = setup(name='CppTestLib',
 try:
@@ -93,17 +97,9 @@ try:
             os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','libsfp'),
             os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','ribbon-bridge'),
             os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','ribbon-bridge-interfaces'),
-            os.path.join(os.environ['HOME'], '.local', 'lib'),
+            os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib'),
             buildDir],
-          libraries=[ 'baromesh', 
-                      'linkbot_wrapper', 
-                      'sfp', 
-                      'rpc',
-                      'robot-interface',
-                      'dongle-interface',
-                      'boost_log',
-                      'boost_thread',
-                      'boost_system'],
+          libraries=libraries,
           )],
         package_dir={'linkbot':''},
         py_modules=['linkbot._linkbot', 'linkbot.linkbot']
