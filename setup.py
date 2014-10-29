@@ -38,6 +38,25 @@ if platform.system() == 'Windows':
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['make', 'linkbot_wrapper', 'VERBOSE=1'])
+    shutil.copyfile( os.path.join(buildDir, 'liblinkbot_wrapper.a'),
+                     os.path.join(buildDir, 'linkbot_wrapper.lib') )
+    qlinkbot_dir = \
+            os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot')
+    shutil.copyfile( 
+        os.path.join(qlinkbot_dir, 'baromesh', 'libbaromesh.a'),
+        os.path.join(qlinkbot_dir, 'baromesh', 'baromesh.lib'))
+    shutil.copyfile( 
+        os.path.join(qlinkbot_dir, 'libsfp', 'libsfp.a'),
+        os.path.join(qlinkbot_dir, 'libsfp', 'sfp.lib'))
+    shutil.copyfile( 
+        os.path.join(qlinkbot_dir, 'ribbon-bridge', 'librpc.a'),
+        os.path.join(qlinkbot_dir, 'ribbon-bridge', 'rpc.lib'))
+    shutil.copyfile( 
+        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'librobot-interface.a'),
+        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'robot-interface.lib'))
+    shutil.copyfile( 
+        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'libdongle-interface.a'),
+        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'dongle-interface.lib'))
     libraries=[ 'linkbot_wrapper', 
                 'baromesh',
                 'sfp', 

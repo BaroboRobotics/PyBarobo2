@@ -1,22 +1,15 @@
-%module(directors="1") linkbot
+%module linkbot
 %{
-    #include "PyLinkbotWrapper/src/linkbot_wrapper.hpp"
+    //#include "PyLinkbotWrapper/src/linkbot_wrapper.hpp"
+    #include "../deps/baromesh/include/baromesh/linkbot.h"
 %}
 
-%feature("director");
-
-/* Set up some exception handling */
-%include exception.i
-
-%exception {
-    try {
-        $function
-    } catch(std::exception& e) {
-        SWIG_exception(SWIG_RuntimeError, e.what());
-    }
-}
-
 namespace barobo {
+enum ButtonState {
+    UP,
+    DOWN
+};
+
 enum MotorDir {
     FORWARD,
     BACKWARD,
@@ -32,54 +25,44 @@ enum JointState {
 };
 }
 
-class _Linkbot {
-public:
-    _Linkbot(const std::string& serialId) : barobo::Linkbot(serialId) {}
-    _Linkbot(const char * serialId) : barobo::Linkbot(serialId) {}
-    ~_Linkbot() {}
-    // std::string serialId () const;
+// Grab a Python function object as a Python object.
+%typemap(python,in) PyObject *pyfunc {
+    if (!PyCallable_Check($source)) {
+        PyErr_SetString(PyExc_TypeError, "Need a callable object!");
+        return NULL;
+    }
+    $target = $source;
+}
 
-    // All member functions may throw a barobo::Error exception on failure.
+linkbot_t* Linkbot_new(const char* serialId);
 
-    void connect ();
-    void disconnect ();
+int Linkbot_connect(linkbot_t*);
+int Linkbot_disconnect(linkbot_t*);
 
-    // Member functions take angles in degrees.
-    // All functions are non-blocking. Use moveWait() to wait for non-blocking
-    // movement functions.
-    /*
-    void drive (int mask, double, double, double);
-    void driveTo (int mask, double, double, double);
-    void formFactor(int&OUTPUT);
-    void getJointAngles (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT, int=10);
-    void getJointStates(int&OUTPUT, 
-                        int&OUTPUT, 
-                        int&OUTPUT, 
-                        int&OUTPUT);
-    void getAccelerometer (int&OUTPUT, double&OUTPUT, double&OUTPUT, double&OUTPUT);
-    */
-    void moveNB (int mask, double, double, double);
-    /*
-    void moveContinuous (int mask, barobo::MotorDir dir1, barobo::MotorDir dir2, barobo::MotorDir dir3);
-    void moveTo (int mask, double, double, double);
-    void setLedColor (int, int, int);
-    void setEncoderEventThreshold (int, double);
-    void setJointSpeeds (int mask, double, double, double);
-    void stop ();
-    void setBuzzerFrequencyOn (float);
-    void getVersions (uint32_t&OUTPUT, uint32_t&OUTPUT, uint32_t&OUTPUT);
-    */
-    void enableButtonEvent(bool enable=true);
-    void enableEncoderEvent(bool enable=true);
-    void enableAccelerometerEvent(bool enable=true);
-    void enableJointEvent(bool enable=true);
+int Linkbot_move(linkbot_t*, int mask, double j1, double j2, double j3);
 
-    void callTestCB();
+%{
+void PythonButtonEventCallback(int buttonNo, 
+                               barobo::ButtonState state, 
+                               int timestamp, 
+                               void* clientdata)
+{
+    PyObject *func, *arglist;
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
 
-    /* Override these */
-    virtual void buttonEventCB(int buttonNo, barobo::ButtonState state, int timestamp);
-    virtual void encoderEventCB(int joint, double angle, int timestamp);
-    virtual void accelerometerEventCB(double x, double y, double z, int timestamp);
-    virtual void jointEventCB(int joint, barobo::JointState state, int timestamp);
-    virtual void testCB();
-};
+    func = (PyObject *) clientdata;               // Get Python function
+    arglist = Py_BuildValue("(bbI)",buttonNo, state, timestamp);             // Build argument list
+    PyEval_CallObject(func,arglist);     // Call Python
+    Py_DECREF(arglist);                           // Trash arglist
+    // Release the thread. No Python API allowed beyond this point.
+    PyGILState_Release(gstate);
+}
+
+void Linkbot_setPythonButtonEventCallback(linkbot_t* l, PyObject *pyfunc)
+{
+    Linkbot_setButtonEventCallback(l, PythonButtonEventCallback, (void*)pyfunc);
+}
+%}
+
+void Linkbot_setPythonButtonEventCallback(linkbot_t*, PyObject *pyfunc);

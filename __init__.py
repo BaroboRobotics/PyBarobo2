@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+pass
 
 from linkbot.linkbot import _Linkbot 
 from linkbot.linkbot import _linkbot as L
