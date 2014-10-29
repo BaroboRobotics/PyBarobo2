@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-pass
 
-from linkbot.linkbot import _Linkbot 
-from linkbot.linkbot import _linkbot as L
+from linkbot import _linkbot as _L
 import time
 import threading
 import functools
 
-class Linkbot(_Linkbot):
+class Linkbot:
     class FormFactor:
         I = 0
         L = 1
@@ -35,17 +33,7 @@ class Linkbot(_Linkbot):
             self._lock.wait(timeout)
 
     def __init__(self, serialId):
-        _Linkbot.__init__(self, serialId)
-        """
-        self._jointStates = Linkbot.JointStates()
-        nbMoveFuncs = [ 'move',
-                        'moveTo' ]
-        for func in nbMoveFuncs:
-            setattr(self, 
-                    '_'+func+'NB', 
-                    functools.partial( getattr(_Linkbot, func), self ) 
-                   )
-        """
+        self.__impl = _L.Linkbot_new(serialId)
         time.sleep(2)
 
     def connect(self):
@@ -53,8 +41,8 @@ class Linkbot(_Linkbot):
         Connect to the robot.
         '''
         # Enable joint event callbacks
-        _Linkbot.connect(self)
-        self.enableJointEvent()
+        _L.Linkbot_connect(self.__impl)
+        # self.enableJointEvent()
         '''
         self._formFactor = self.formFactor()
         if self._formFactor == Linkbot.FormFactor.I:

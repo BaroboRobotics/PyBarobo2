@@ -11,9 +11,9 @@ import platform
 import sys
 
 origCWD = os.getcwd()
-#projDir = os.path.dirname(origCWD)
-projDir = os.path.join(origCWD, 'PyLinkbotWrapper')
-buildDir = os.path.join(projDir, 'build-'+platform.platform())
+projDir = os.path.dirname(origCWD)
+#projDir = os.path.join(os.path.dirname(origCWD), 'BaroboBrowser')
+buildDir = os.path.join(origCWD, 'build-ext-'+ platform.platform())
 
 try:
     if not os.path.isdir(buildDir):
@@ -37,28 +37,8 @@ if platform.system() == 'Windows':
                 '-DBUILD_SHARED_LIBS=OFF',
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
-    subprocess.check_call(['make', 'linkbot_wrapper', 'VERBOSE=1'])
-    shutil.copyfile( os.path.join(buildDir, 'liblinkbot_wrapper.a'),
-                     os.path.join(buildDir, 'linkbot_wrapper.lib') )
-    qlinkbot_dir = \
-            os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot')
-    shutil.copyfile( 
-        os.path.join(qlinkbot_dir, 'baromesh', 'libbaromesh.a'),
-        os.path.join(qlinkbot_dir, 'baromesh', 'baromesh.lib'))
-    shutil.copyfile( 
-        os.path.join(qlinkbot_dir, 'libsfp', 'libsfp.a'),
-        os.path.join(qlinkbot_dir, 'libsfp', 'sfp.lib'))
-    shutil.copyfile( 
-        os.path.join(qlinkbot_dir, 'ribbon-bridge', 'librpc.a'),
-        os.path.join(qlinkbot_dir, 'ribbon-bridge', 'rpc.lib'))
-    shutil.copyfile( 
-        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'librobot-interface.a'),
-        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'robot-interface.lib'))
-    shutil.copyfile( 
-        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'libdongle-interface.a'),
-        os.path.join(qlinkbot_dir, 'ribbon-bridge-interfaces', 'dongle-interface.lib'))
-    libraries=[ 'linkbot_wrapper', 
-                'baromesh',
+    subprocess.check_call(['mingw32-make', 'baromesh', 'VERBOSE=1'])
+    libraries=[ 'baromesh',
                 'sfp', 
                 'rpc',
                 'robot-interface',
@@ -76,9 +56,8 @@ else:
                 '-DBUILD_SHARED_LIBS=OFF',
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
-    subprocess.check_call(['make', 'linkbot_wrapper', 'VERBOSE=1'])
-    libraries=[ 'linkbot_wrapper', 
-                'baromesh',
+    subprocess.check_call(['make', 'baromesh', 'VERBOSE=1'])
+    libraries=[ 'baromesh',
                 'sfp', 
                 'rpc',
                 'robot-interface',
@@ -112,10 +91,10 @@ try:
             os.path.join(origCWD, 'PyLinkbotWrapper', 'src'),
             ],
           library_dirs=[
-            os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','baromesh'),
-            os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','libsfp'),
-            os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','ribbon-bridge'),
-            os.path.join(buildDir, 'LinkbotLabs', 'BaroboBrowser','qlinkbot','ribbon-bridge-interfaces'),
+            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','baromesh'),
+            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','libsfp'),
+            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','ribbon-bridge'),
+            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','ribbon-bridge-interfaces'),
             os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib'),
             buildDir],
           libraries=libraries,
