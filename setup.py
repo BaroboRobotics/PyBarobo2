@@ -45,7 +45,9 @@ if platform.system() == 'Windows':
                 'dongle-interface',
                 'boost_log-mgw48-mt-d-1_56',
                 'boost_thread-mgw48-mt-d-1_56',
-                'boost_system-mgw48-mt-d-1_56']
+                'boost_system-mgw48-mt-d-1_56',
+                'ws2_32',
+                'setupapi']
 else:
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
@@ -83,8 +85,8 @@ try:
         url='http://www.barobo.com',
         #packages=['barobo'],
         ext_package='linkbot',
-        ext_modules=[Extension('_linkbot', 
-          sources=['linkbot.i'],
+        ext_modules=[Extension('__linkbot', 
+          sources=['_linkbot.i'],
           swig_opts=['-threads', '-c++'],
           include_dirs=[
             os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh', 'include'),
@@ -100,7 +102,7 @@ try:
           libraries=libraries,
           )],
         package_dir={'linkbot':''},
-        py_modules=['linkbot._linkbot', 'linkbot.linkbot']
+        py_modules=['linkbot._linkbot']
         )
 except Exception as e:
     print(e)

@@ -1,4 +1,4 @@
-%module linkbot
+%module _linkbot
 %{
     //#include "PyLinkbotWrapper/src/linkbot_wrapper.hpp"
     #include "../deps/baromesh/include/baromesh/linkbot.h"
