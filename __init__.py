@@ -120,7 +120,7 @@ class Linkbot:
         '''
         assert (jointNo >= 1 and jointNo <= 3)
         mask = 1<<(jointNo-1)
-        self._moveNB(mask, angle, angle, angle)
+        _L.linkbotMove(self.__impl, mask, angle, angle, angle)
 
     def moveWait(self, mask = 0x07):
         '''
