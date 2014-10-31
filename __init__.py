@@ -55,6 +55,15 @@ class Linkbot:
         else:
             self._motorMask = 0x01
 
+    def enableAccelerometerEvents(self):
+        _L.linkbotSetPythonAccelerometerEventCallback(self.__impl,
+            self.accelerometerEventCB)
+
+    def enableEncoderEvents(self, granularity=20.0):
+        _L.linkbotSetPythonEncoderEventCallback(self.__impl, 
+                                                granularity, 
+                                                self.encoderEventCB)
+
     def enableButtonEvents(self):
         _L.linkbotSetPythonButtonEventCallback(self.__impl, self.buttonEventCB)
 

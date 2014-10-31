@@ -91,6 +91,31 @@ int linkbotMove(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotMoveTo(Linkbot*, int mask, double j1, double j2, double j3);
 
 %{
+void PythonAccelerometerEventCallback(double x, double y, double z,
+                                      int timestamp, void* clientdata)
+{
+    PyObject *func, *arglist;
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    func = (PyObject *) clientdata;               // Get Python function
+    arglist = Py_BuildValue("(dddI)",x, y, z, timestamp);             // Build argument list
+    PyEval_CallObject(func,arglist);     // Call Python
+    Py_DECREF(arglist);                           // Trash arglist
+    // Release the thread. No Python API allowed beyond this point.
+    PyGILState_Release(gstate);
+}
+
+void linkbotSetPythonAccelerometerEventCallback(Linkbot* l, PyObject *pyfunc)
+{
+    linkbotSetAccelerometerEventCallback(l, PythonAccelerometerEventCallback, (void*)pyfunc);
+    Py_INCREF(pyfunc);
+}
+%}
+
+void linkbotSetPythonAccelerometerEventCallback(Linkbot*, PyObject *pyfunc);
+
+%{
 void PythonButtonEventCallback(int buttonNo, 
                                barobo::ButtonState state, 
                                int timestamp, 
@@ -135,14 +160,14 @@ void PythonEncoderEventCallback(int jointNo,
     PyGILState_Release(gstate);
 }
 
-void linkbotSetPythonEncoderEventCallback(Linkbot* l, PyObject *pyfunc)
+void linkbotSetPythonEncoderEventCallback(Linkbot* l, double granularity, PyObject *pyfunc)
 {
-    linkbotSetEncoderEventCallback(l, PythonEncoderEventCallback, (void*)pyfunc);
+    linkbotSetEncoderEventCallback(l, PythonEncoderEventCallback, granularity, (void*)pyfunc);
     Py_INCREF(pyfunc);
 }
 %}
 
-void linkbotSetPythonEncoderEventCallback(Linkbot*, PyObject *pyfunc);
+void linkbotSetPythonEncoderEventCallback(Linkbot*, double granularity, PyObject *pyfunc);
 
 %{
 void PythonJointEventCallback(int jointNo,
