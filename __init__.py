@@ -14,7 +14,7 @@ class Linkbot:
     class JointStates:
         def __init__(self):
             self._lock = threading.Condition()
-            self._state = [L.JOINT_STOP]*3
+            self._state = [_L.JOINT_STOP]*3
 
         def lock(self):
             self._lock.acquire()
@@ -33,7 +33,9 @@ class Linkbot:
             self._lock.wait(timeout)
 
     def __init__(self, serialId):
-        self.__impl = _L.Linkbot_new(serialId)
+        _L.linkbotPythonInit()
+        self.__impl = _L.linkbotNew(serialId)
+        self._jointStates = Linkbot.JointStates()
         time.sleep(2)
 
     def connect(self):
@@ -41,10 +43,9 @@ class Linkbot:
         Connect to the robot.
         '''
         # Enable joint event callbacks
-        _L.Linkbot_connect(self.__impl)
-        # self.enableJointEvent()
-        '''
-        self._formFactor = self.formFactor()
+        _L.linkbotConnect(self.__impl)
+        self.enableJointEvents()
+        self._formFactor = _L.linkbotGetFormFactor(self.__impl)[1]
         if self._formFactor == Linkbot.FormFactor.I:
             self._motorMask = 0x05
         elif self._formFactor == Linkbot.FormFactor.L:
@@ -53,7 +54,12 @@ class Linkbot:
             self._motorMask = 0x07
         else:
             self._motorMask = 0x01
-        '''
+
+    def enableButtonEvents(self):
+        _L.linkbotSetPythonButtonEventCallback(self.__impl, self.buttonEventCB)
+
+    def enableJointEvents(self):
+        _L.linkbotSetPythonJointEventCallback(self.__impl, self.jointEventCB)
 
     def move(self, j1, j2, j3):
         '''
@@ -79,7 +85,7 @@ class Linkbot:
         robot.setLEDColor(0, 0, 255)
 
         '''
-        _Linkbot.moveNB(self, 0x07, j1, j2, j3)
+        _L.linkbotMove(self.__impl, 0x07, j1, j2, j3)
 
     def moveJoint(self, jointNo, angle):
         '''
@@ -121,19 +127,20 @@ class Linkbot:
         '''
         mask = mask & self._motorMask
         self._jointStates.lock()
-        states = self.getJointStates()[1:]
+        states = _L.linkbotGetJointStates(self.__impl)[2:]
         for s,i in zip(states, range(len(states))):
             self._jointStates.set_state(i, s)
 
         for i in range(3):
             if (1<<i) & mask:
-                while self._jointStates.state(i) == L.JOINT_MOVING:
+                while self._jointStates.state(i) == _L.JOINT_MOVING:
                     self._jointStates.wait()
         self._jointStates.unlock()
 
     # CALLBACKS
 
-    def buttonEventCB(self, buttonNo, state, timestamp):
+    #def buttonEventCB(self, buttonNo, state, timestamp):
+    def buttonEventCB(*args):
         print('Button press detected')
 
     def encoderEventCB(self, jointNo, angle, timestamp):
