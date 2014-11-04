@@ -75,7 +75,6 @@ if os.environ['BOOST_ROOT'] is None:
     print('Environment variable BOOST_ROOT is not declared. aborting...')
     sys.exit(0)
 
-#dist = setup(name='CppTestLib',
 try:
     setup(name='PyBarobo2',
         version='2.0.0',
@@ -83,7 +82,7 @@ try:
         author='David Ko',
         author_email='david@barobo.com',
         url='http://www.barobo.com',
-        #packages=['barobo'],
+        packages=['demo'],
         ext_package='linkbot',
         ext_modules=[Extension('__linkbot', 
           sources=['_linkbot.i'],
@@ -102,12 +101,9 @@ try:
           libraries=libraries,
           )],
         package_dir={'linkbot':''},
-        py_modules=['linkbot._linkbot']
+        py_modules=['linkbot._linkbot'],
+        zip_safe = False,
         )
 except Exception as e:
     print(e)
-
-#build_py = build_py(dist)
-#build_py.ensure_finalized()
-#build_py.run()
 

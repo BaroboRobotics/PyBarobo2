@@ -17,27 +17,6 @@ void linkbotPythonInit(void)
 
 void linkbotPythonInit(void);
 
-namespace barobo {
-enum ButtonState {
-    UP,
-    DOWN
-};
-
-enum MotorDir {
-    FORWARD,
-    BACKWARD,
-    NEUTRAL,
-    HOLD
-};
-
-enum JointState {
-    JOINT_STOP,
-    JOINT_HOLD,
-    JOINT_MOVING,
-    JOINT_FAIL
-};
-}
-
 // Grab a Python function object as a Python object.
 %typemap(python,in) PyObject *pyfunc {
     if (!PyCallable_Check($source)) {
@@ -54,10 +33,13 @@ Linkbot* linkbotNew(const char* serialId);
 int linkbotConnect(Linkbot*);
 int linkbotDisconnect(Linkbot*);
 
+/* GETTERS */
+int linkbotGetAccelerometer(Linkbot *l, int *OUTPUT, double *OUTPUT, 
+                            double *OUTPUT, double *OUTPUT);
 %{
 int linkbotGetFormFactor(Linkbot *l, int *form)
 {
-    barobo::FormFactor _form;
+    barobo::FormFactor::Type _form;
     int rc;
     if((rc = linkbotGetFormFactor(l, &_form))) {
         return rc;
@@ -67,11 +49,13 @@ int linkbotGetFormFactor(Linkbot *l, int *form)
 }
 %}
 int linkbotGetFormFactor(Linkbot *l, int *OUTPUT);
+int linkbotGetJointAngles(Linkbot *l, int *OUTPUT, double *OUTPUT, 
+                          double *OUTPUT, double *OUTPUT);
 
 %{
 int linkbotGetJointStates(Linkbot* l, int *timestamp, int *j1, int* j2, int* j3)
 {
-    barobo::JointState values[3];
+    barobo::JointState::Type values[3];
     int rc;
     if((rc = linkbotGetJointStates(l, timestamp, &values[0], &values[1],
         &values[2])))
@@ -86,10 +70,25 @@ int linkbotGetJointStates(Linkbot* l, int *timestamp, int *j1, int* j2, int* j3)
 %}
 int linkbotGetJointStates(Linkbot*, int *OUTPUT, int *OUTPUT, int *OUTPUT, int
                           *OUTPUT);
+int linkbotGetLedColor(Linkbot *l, int *OUTPUT, int *OUTPUT, int *OUTPUT);
 
+/* SETTERS */
+int linkbotSetBuzzerFrequencyOn(Linkbot *l, float freq);
+int linkbotSetEncoderEventThreshold(Linkbot *l, int jointNo, double thresh);
+int linkbotSetJointSpeeds(Linkbot *l, int mask, double j1, double j2, 
+                          double j3);
+
+/* MOVEMENT */
+int linkbotMoveContinuous(Linkbot* l, int mask, 
+                          barobo::JointState::Type d1, 
+                          barobo::JointState::Type d2, 
+                          barobo::JointState::Type d3);
 int linkbotMove(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotMoveTo(Linkbot*, int mask, double j1, double j2, double j3);
+int linkbotDrive(Linkbot*, int mask, double j1, double j2, double j3);
+int linkbotDriveTo(Linkbot*, int mask, double j1, double j2, double j3);
 
+/* CALLBACKS */
 %{
 void PythonAccelerometerEventCallback(double x, double y, double z,
                                       int timestamp, void* clientdata)
@@ -106,18 +105,25 @@ void PythonAccelerometerEventCallback(double x, double y, double z,
     PyGILState_Release(gstate);
 }
 
-void linkbotSetPythonAccelerometerEventCallback(Linkbot* l, PyObject *pyfunc)
+int linkbotSetPythonAccelerometerEventCallback(Linkbot* l, PyObject *pyfunc)
 {
-    linkbotSetAccelerometerEventCallback(l, PythonAccelerometerEventCallback, (void*)pyfunc);
+    int rc = linkbotSetAccelerometerEventCallback(l, PythonAccelerometerEventCallback, (void*)pyfunc);
     Py_INCREF(pyfunc);
+    return rc;
+}
+
+int linkbotUnsetPythonAccelerometerEventCallback(Linkbot* l)
+{
+    return linkbotSetAccelerometerEventCallback(l, NULL, NULL);
 }
 %}
 
-void linkbotSetPythonAccelerometerEventCallback(Linkbot*, PyObject *pyfunc);
+int linkbotSetPythonAccelerometerEventCallback(Linkbot*, PyObject *pyfunc);
+int linkbotUnsetPythonAccelerometerEventCallback(Linkbot* l);
 
 %{
 void PythonButtonEventCallback(int buttonNo, 
-                               barobo::ButtonState state, 
+                               barobo::ButtonState::Type state, 
                                int timestamp, 
                                void* clientdata)
 {
@@ -133,14 +139,20 @@ void PythonButtonEventCallback(int buttonNo,
     PyGILState_Release(gstate);
 }
 
-void linkbotSetPythonButtonEventCallback(Linkbot* l, PyObject *pyfunc)
+int linkbotSetPythonButtonEventCallback(Linkbot* l, PyObject *pyfunc)
 {
-    linkbotSetButtonEventCallback(l, PythonButtonEventCallback, (void*)pyfunc);
+    int rc = linkbotSetButtonEventCallback(l, PythonButtonEventCallback, (void*)pyfunc);
     Py_INCREF(pyfunc);
+    return rc;
+}
+int linkbotUnsetPythonButtonEventCallback(Linkbot* l)
+{
+    return linkbotSetButtonEventCallback(l, NULL, NULL);
 }
 %}
 
-void linkbotSetPythonButtonEventCallback(Linkbot*, PyObject *pyfunc);
+int linkbotSetPythonButtonEventCallback(Linkbot*, PyObject *pyfunc);
+int linkbotUnsetPythonButtonEventCallback(Linkbot* l);
 
 %{
 void PythonEncoderEventCallback(int jointNo,
@@ -160,18 +172,24 @@ void PythonEncoderEventCallback(int jointNo,
     PyGILState_Release(gstate);
 }
 
-void linkbotSetPythonEncoderEventCallback(Linkbot* l, double granularity, PyObject *pyfunc)
+int linkbotSetPythonEncoderEventCallback(Linkbot* l, double granularity, PyObject *pyfunc)
 {
-    linkbotSetEncoderEventCallback(l, PythonEncoderEventCallback, granularity, (void*)pyfunc);
+    int rc = linkbotSetEncoderEventCallback(l, PythonEncoderEventCallback, granularity, (void*)pyfunc);
     Py_INCREF(pyfunc);
+    return rc;
+}
+int linkbotUnsetPythonEncoderEventCallback(Linkbot* l)
+{
+    return linkbotSetEncoderEventCallback(l, NULL, 0, NULL);
 }
 %}
 
-void linkbotSetPythonEncoderEventCallback(Linkbot*, double granularity, PyObject *pyfunc);
+int linkbotSetPythonEncoderEventCallback(Linkbot*, double granularity, PyObject *pyfunc);
+int linkbotUnsetPythonEncoderEventCallback(Linkbot* l);
 
 %{
 void PythonJointEventCallback(int jointNo,
-                              barobo::JointState state,
+                              barobo::JointState::Type state,
                               int timestamp,
                               void* clientdata)
 {
@@ -187,12 +205,18 @@ void PythonJointEventCallback(int jointNo,
     PyGILState_Release(gstate);
 }
 
-void linkbotSetPythonJointEventCallback(Linkbot* l, PyObject *pyfunc)
+int linkbotSetPythonJointEventCallback(Linkbot* l, PyObject *pyfunc)
 {
-    linkbotSetJointEventCallback(l, PythonJointEventCallback, (void*)pyfunc);
+    int rc = linkbotSetJointEventCallback(l, PythonJointEventCallback, (void*)pyfunc);
     Py_INCREF(pyfunc);
+    return rc;
+}
+int linkbotUnsetPythonJointEventCallback(Linkbot* l)
+{
+    return linkbotSetJointEventCallback(l, NULL, NULL);
 }
 %}
 
-void linkbotSetPythonJointEventCallback(Linkbot* l, PyObject *pyfunc);
+int linkbotSetPythonJointEventCallback(Linkbot* l, PyObject *pyfunc);
+int linkbotUnsetPythonJointEventCallback(Linkbot* l);
 
