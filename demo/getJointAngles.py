@@ -10,14 +10,9 @@ if __name__ == "__main__":
         quit()
     serialID = sys.argv[1]
     myLinkbot = linkbot.Linkbot(serialID)
-    time.sleep(2)
-    success = False
-    while not success:
-        try:
-            myLinkbot.connect()
-            success = True
-        except Exception as e:
-            print(e)
+    myLinkbot.connect()
 
     print(myLinkbot.getJointAngles())
+    for i in range(1,4):
+        print(myLinkbot.getJointAngle(i))
 

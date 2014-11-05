@@ -120,6 +120,13 @@ class Linkbot:
         assert(values[0] == 0)
         return values[1]
 
+    def getJointAngle(self, jointNo):
+        '''
+        Get the current angle for a particular joint
+        '''
+        assert(jointNo >= 1 and jointNo <= 3)
+        return self.getJointAngles()[jointNo-1]
+
     def getJointAngles(self):
         '''
         Get the current joint angles of the robot.
