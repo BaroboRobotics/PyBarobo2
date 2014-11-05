@@ -199,6 +199,20 @@ class Linkbot:
         rc = _L.linkbotDrive(self.__impl, mask, j1, j2, j3)
         assert(rc == 0)
 
+    def driveJoint(self, jointNo, angle):
+        self.driveJointNB(jointNo, angle)
+        self.moveWait(1<<(jointNo-1))
+
+    def driveJointNB(self, jointNo, angle):
+        self.driveNB(angle, angle, angle, 1<<(jointNo-1))
+
+    def driveJointTo(self, jointNo, angle):
+        self.driveJointToNB(jointNo, angle)
+        self.moveWait(1<<(jointNo))
+
+    def driveJointToNB(self, jointNo, angle):
+        self.driveToNB(angle, angle, angle, 1<<(jointNo-1))
+
     def driveTo(self, j1, j2, j3, mask=0x07):
         self.driveToNB(j1, j2, j3, mask)
         self.moveWait(mask)

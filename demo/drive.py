@@ -13,5 +13,21 @@ if __name__ == "__main__":
     time.sleep(2)
     myLinkbot.connect()
 
+    print('Moving all motors to zero...')
+    myLinkbot.driveTo(0, 0, 0)
+
+
+    print('Moving all motors 90 degrees...')
     myLinkbot.driveNB(90, 90, 90)
-    time.sleep(1)
+    print('Waiting for movement to finish...')
+    myLinkbot.moveWait()
+    print('Done.')
+
+    print('Moving all motors -90 degrees...')
+    myLinkbot.drive(-90, -90, -90)
+    print('Done')
+
+    print('Moving motor 1 90 degrees...')
+    myLinkbot.driveJoint(1, 90)
+    print('Moving motor 1 -90 degrees...')
+    myLinkbot.driveJoint(1, -90)
