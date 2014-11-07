@@ -141,6 +141,22 @@ class Linkbot:
         assert(values[0] == 0)
         return tuple(values[2:])
 
+    def getJointSpeed(self, jointNo):
+        return self.getJointSpeeds()[jointNo-1]
+   
+    def getJointSpeeds(self):
+        '''
+        Get the current joint speed settings.
+
+        @rtype: (number, number, number)
+        @return: Returned values are in degrees/second. Note that the values are
+        the speed settings of each joint; not the actual speed the joint is
+        currently moving at.
+        '''
+        values = _L.linkbotGetJointSpeeds(self.__impl)
+        assert(values[0] == 0)
+        return tuple(values[1:])
+    
     def getJointStates(self):
         '''
         Get the movement state for each of the joints.

@@ -70,6 +70,7 @@ int linkbotGetJointStates(Linkbot* l, int *timestamp, int *j1, int* j2, int* j3)
 %}
 int linkbotGetJointStates(Linkbot*, int *OUTPUT, int *OUTPUT, int *OUTPUT, int
                           *OUTPUT);
+int linkbotGetJointSpeeds(Linkbot*, double*OUTPUT, double*OUTPUT, double*OUTPUT);
 int linkbotGetLedColor(Linkbot *l, int *OUTPUT, int *OUTPUT, int *OUTPUT);
 
 /* SETTERS */
