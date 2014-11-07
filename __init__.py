@@ -286,7 +286,7 @@ class Linkbot:
                   whatever speed the joint was last set to with the
                   setJointSpeeds() function.
         '''
-        rc = _L.linkbotMoveContinuous(mask, dir1, dir2, dir3)
+        rc = _L.linkbotMoveContinuous(self.__impl, mask, dir1, dir2, dir3)
         assert(rc == 0)
 
     def moveJoint(self, jointNo, angle):
@@ -345,6 +345,10 @@ class Linkbot:
                 while self._jointStates.state(i) == Linkbot.JointStates.MOVING:
                     self._jointStates.wait()
         self._jointStates.unlock()
+
+    def stop(self, mask = 0x07):
+        rc = _L.linkbotStop(self.__impl, mask)
+        assert(rc == 0)
 
     # CALLBACKS
 

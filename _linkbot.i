@@ -80,14 +80,33 @@ int linkbotSetJointSpeeds(Linkbot *l, int mask, double j1, double j2,
                           double j3);
 
 /* MOVEMENT */
+/*
 int linkbotMoveContinuous(Linkbot* l, int mask, 
                           barobo::JointState::Type d1, 
                           barobo::JointState::Type d2, 
                           barobo::JointState::Type d3);
+*/
+%{
+int linkbotMoveContinuous(Linkbot* l, int mask, 
+                          int d1, 
+                          int d2, 
+                          int d3)
+{
+    return linkbotMoveContinuous(l, mask,
+        static_cast<barobo::JointState::Type>(d1),
+        static_cast<barobo::JointState::Type>(d2),
+        static_cast<barobo::JointState::Type>(d3) );
+}
+%}
+int linkbotMoveContinuous(Linkbot* l, int mask, 
+                          int d1, 
+                          int d2, 
+                          int d3);
 int linkbotMove(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotMoveTo(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotDrive(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotDriveTo(Linkbot*, int mask, double j1, double j2, double j3);
+int linkbotStop(Linkbot*, int mask);
 
 /* CALLBACKS */
 %{
