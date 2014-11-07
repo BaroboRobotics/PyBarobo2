@@ -43,6 +43,8 @@ if platform.system() == 'Windows':
                 'rpc',
                 'robot-interface',
                 'dongle-interface',
+                'commontypes-proto',
+                'rpc-proto',
                 'boost_log-mgw48-mt-d-1_56',
                 'boost_thread-mgw48-mt-d-1_56',
                 'boost_system-mgw48-mt-d-1_56',
@@ -64,6 +66,8 @@ else:
                 'rpc',
                 'robot-interface',
                 'dongle-interface',
+                'commontypes-proto',
+                'rpc-proto',
                 'boost_log',
                 'boost_thread',
                 'boost_system']
