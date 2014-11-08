@@ -185,7 +185,7 @@ void PythonEncoderEventCallback(int jointNo,
     gstate = PyGILState_Ensure();
 
     func = (PyObject *) clientdata;               // Get Python function
-    arglist = Py_BuildValue("(bdI)",jointNo, anglePosition, timestamp); // Build argument list
+    arglist = Py_BuildValue("(bdI)",jointNo+1, anglePosition, timestamp); // Build argument list
     PyEval_CallObject(func,arglist);     // Call Python
     Py_DECREF(arglist);                           // Trash arglist
     // Release the thread. No Python API allowed beyond this point.

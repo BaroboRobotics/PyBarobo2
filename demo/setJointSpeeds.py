@@ -12,10 +12,19 @@ if __name__ == "__main__":
     myLinkbot = linkbot.Linkbot(serialID)
     myLinkbot.connect()
 
-    myLinkbot.setJointSpeeds(45, 45, 45)
-    myLinkbot.move(90, 90, 90)
-    myLinkbot.setJointSpeeds(120, 120, 120)
-    myLinkbot.move(90, 90, 90)
-    myLinkbot.setJointSpeed(1, 30)
-    myLinkbot.move(360, 360, 360)
+    speed = -90
+    myLinkbot.setJointSpeed(1, speed)
+    myLinkbot.moveContinuous(
+        linkbot.Linkbot.JointStates.MOVING,
+        0,
+        0,
+        1
+        )
+
+    while speed < 90:
+        speed += 1
+        myLinkbot.setJointSpeed(1, speed)
+        #time.sleep(0.2)
+
+    myLinkbot.stop()
 
