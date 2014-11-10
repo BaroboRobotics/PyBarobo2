@@ -12,7 +12,7 @@ if __name__ == "__main__":
     myLinkbot = linkbot.Linkbot(serialID)
     myLinkbot.connect()
 
-    myLinkbot.setBuzzerFrequency(440)
-    time.sleep(1)
+    for f in range(100, 600, 5):
+        myLinkbot.setBuzzerFrequency(f)
     myLinkbot.setBuzzerFrequency(0)
 
