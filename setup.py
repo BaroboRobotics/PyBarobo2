@@ -80,7 +80,7 @@ if os.environ['BOOST_ROOT'] is None:
     sys.exit(0)
 
 try:
-    setup(name='PyBarobo2',
+    setup(name='Linkbot',
         version='2.0.0',
         description='Barobo Linkbot module',
         author='David Ko',
@@ -93,13 +93,12 @@ try:
           swig_opts=['-threads', '-c++'],
           include_dirs=[
             os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh', 'include'),
-            os.path.join(origCWD, 'PyLinkbotWrapper', 'src'),
             ],
           library_dirs=[
-            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','baromesh'),
-            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','libsfp'),
-            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','ribbon-bridge'),
-            os.path.join(buildDir, 'BaroboBrowser','qlinkbot','ribbon-bridge-interfaces'),
+            os.path.join(buildDir, 'BaroboBrowser','baromesh'),
+            os.path.join(buildDir, 'BaroboBrowser','libsfp'),
+            os.path.join(buildDir, 'BaroboBrowser','ribbon-bridge'),
+            os.path.join(buildDir, 'BaroboBrowser','ribbon-bridge-interfaces'),
             os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib'),
             buildDir],
           libraries=libraries,

@@ -131,6 +131,9 @@ class Linkbot:
         '''
         Get the current joint angles of the robot.
 
+        Example::
+            j1, j2, j3 = robot.getJointAngles()
+
         @rtype: (number, number, number)
         @return: Returned values are in degrees. The three values indicate the
                  joint angles for joints 1, 2, and 3 respectively. Values
@@ -293,10 +296,12 @@ class Linkbot:
         '''
         Move a single joint and wait for the motion to finish.
 
-        # The following code moves joint 1 90 degrees, and then moves joint 3 90
-        # degrees after joint 1 has stopped moving.
-        robot.moveJoint(1, 90)
-        robot.moveJoint(3, 90)
+        Example::
+
+            # The following code moves joint 1 90 degrees, and then moves joint
+            # 3 90 degrees after joint 1 has stopped moving.
+            robot.moveJoint(1, 90)
+            robot.moveJoint(3, 90)
         '''
         assert (jointNo >= 1 and jointNo <= 3)
         self.moveJointNB(jointNo, angle)
@@ -306,10 +311,12 @@ class Linkbot:
         '''
         Move a single joint. Returns after the joint begins moving.
 
-        # The following code moves joint 1 90 degrees and moves joint 3 90
-        # degrees simultaneously.
-        robot.moveJointNB(1, 90)
-        robot.moveJointNB(3, 90)
+        Example::
+
+            # The following code moves joint 1 90 degrees and moves joint 3 90
+            # degrees simultaneously.
+            robot.moveJointNB(1, 90)
+            robot.moveJointNB(3, 90)
         '''
         assert (jointNo >= 1 and jointNo <= 3)
         mask = 1<<(jointNo-1)
@@ -328,11 +335,11 @@ class Linkbot:
 
         If called with no arguments, wait for all joints to finish moving. The
         'mask' parameter is a bitmask and can be used to specify which joint(s)
-        to wait for. i.e. 
+        to wait for. i.e. ::
 
-        robot.moveWait(0x01) # Only wait for joint 1
-        robot.moveWait(0x03) # 0x03 is 0b011 in binary, so wait for joints 1 and
-                             # 2 to finish moving.
+            robot.moveWait(0x01) # Only wait for joint 1
+            robot.moveWait(0x03) # 0x03 is 0b011 in binary, so wait for joints 1
+                                 # and 2 to finish moving.
         '''
         mask = mask & self._motorMask
         self._jointStates.lock()
@@ -347,39 +354,91 @@ class Linkbot:
         self._jointStates.unlock()
 
     def stop(self, mask = 0x07):
+        '''
+        Stop a motor or motors on a robot, immediately making the motors
+        coast. 
+        '''
         rc = _L.linkbotStop(self.__impl, mask)
         assert(rc == 0)
+
+    def stopJoint(self, jointNo):
+        '''
+        Stop a single joint on the robot, immediately making the joint coast.
+        '''
+        self.stop(1<<(jointNo-1))
 
     # CALLBACKS
 
     def disableAccelerometerEvents(self):
+        '''
+        Make the robot stop reporting accelerometer change events.
+        '''
         rc = _L.linkbotUnsetPythonAccelerometerEventCallback(self.__impl)
         assert(rc == 0)
 
     def disableButtonEvents(self):
+        '''
+        Make the robot stop reporting button change events.
+        '''
         rc = _L.linkbotUnsetPythonButtonEventCallback(self.__impl)
         assert(rc == 0)
 
     def disableEncoderEvents(self):
+        '''
+        Make the robot stop reporting encoder change events.
+        '''
         rc = _L.linkbotUnsetPythonEncoderEventCallback(self.__impl)
         assert(rc == 0)
 
     def disableJointEvents(self):
+        '''
+        Make the robot stop reporting joint status change events.
+        '''
         rc = _L.linkbotUnsetPythonJointEventCallback(self.__impl)
         assert(rc == 0)
 
     def enableAccelerometerEvents(self, cb=None):
+        '''
+        Make the robot begin reporting accelerometer change events. To handle
+        these events, a callback function may be specified by the "cb"
+        parameter, or the member function "accelerometerEventCB()" may be
+        overridden.
+
+        @param cb: (optional) A callback function that will be called when
+        accelerometer events are received. The callback function prototype
+        should be cb(x, y, z, timestamp)
+        '''
         _L.linkbotSetPythonAccelerometerEventCallback(self.__impl,
             self.accelerometerEventCB)
         self.__accelCb = cb
 
     def enableEncoderEvents(self, granularity=20.0, cb=None):
+        '''
+        Make the robot begin reporting joint encoder events. To handle these
+        events, a callback function may be specified by the "cb" parameter, or
+        the member function "encoderEventCB()" may be overridden.
+
+        @param granularity: (optional) The granularity of the reported encoder
+        events, in degrees. For example, setting the granularity to "10.0" means
+        the robot will report an encoder event for every 10 degrees that a joint
+        is rotated.
+        @param cb: (optional) The callback function to handle the event. The
+        function prototype should be cb(jointNo, angle, timestamp)
+        '''
         _L.linkbotSetPythonEncoderEventCallback(self.__impl, 
                                                 granularity, 
                                                 self.encoderEventCB)
         self.__encoderCb = cb
 
     def enableButtonEvents(self, cb=None):
+        '''
+        Make the robot begin reporting button events. To handle the events, a
+        callback function may be specified by the "cb" parameter, or the member
+        function "buttonEventCB()" may be overridden.
+
+        @param cb: (optional) A callback function with the prototype
+        cb(ButtonNo, buttonState, timestamp)
+        '''
         _L.linkbotSetPythonButtonEventCallback(self.__impl, self.buttonEventCB)
         self.__buttonCb = cb
 
@@ -408,3 +467,7 @@ class Linkbot:
 
     def testCB(self):
         print('Test CB called.')
+
+    def _setSerialId(self, serialId):
+        rc = _L.linkbotWriteEeprom(self.__impl, 0x412, serialId, 4)
+        assert(rc == 0)

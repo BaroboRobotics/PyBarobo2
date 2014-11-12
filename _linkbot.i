@@ -5,6 +5,7 @@
 %}
 
 %{
+using namespace baromesh;
 void linkbotPythonInit(void)
 {
     // Make sure the GIL has been created since we need to acquire it in our
@@ -108,6 +109,8 @@ int linkbotDrive(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotDriveTo(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotStop(Linkbot*, int mask);
 
+int linkbotWriteEeprom(Linkbot* l, unsigned int address, const char* data, size_t size);
+int linkbotZZZ(Linkbot* l, unsigned int size);
 /* CALLBACKS */
 %{
 void PythonAccelerometerEventCallback(double x, double y, double z,
@@ -239,4 +242,5 @@ int linkbotUnsetPythonJointEventCallback(Linkbot* l)
 
 int linkbotSetPythonJointEventCallback(Linkbot* l, PyObject *pyfunc);
 int linkbotUnsetPythonJointEventCallback(Linkbot* l);
+
 
