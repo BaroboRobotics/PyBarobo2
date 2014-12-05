@@ -27,29 +27,34 @@ except Exception as e:
 # Go to the build directory
 os.chdir(buildDir)
 
+boost_libs = ['log', 'thread', 'system', 'coroutine', 'context']
+
+libraries=[ 'baromesh',
+            'daemon-interface', 
+            'sfp', 
+            'rpc',
+            'robot-interface',
+            'commontypes-proto',
+            'rpc-proto' ]
+
 if platform.system() == 'Windows':
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
         subprocess.check_call([
                 'cmake', 
                 '-G', 'MinGW Makefiles', 
-                '-DCMAKE_CXX_FLAGS=-fPIC', 
+                '-DCMAKE_CXX_FLAGS="-fPIC -static-libgcc -static-stdc++"', 
+                '-DCMAKE_EXE_LINKER_FLAGS="-static-libgcc -static-stdc++"',
                 '-DBUILD_SHARED_LIBS=OFF',
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['mingw32-make', 'baromesh', 'VERBOSE=1'])
-    libraries=[ 'baromesh',
-                'sfp', 
-                'rpc',
-                'robot-interface',
-                'dongle-interface',
-                'commontypes-proto',
-                'rpc-proto',
-                'boost_log-mgw48-mt-d-1_56',
-                'boost_thread-mgw48-mt-d-1_56',
-                'boost_system-mgw48-mt-d-1_56',
-                'ws2_32',
-                'setupapi']
+    libraries+=[ 'ws2_32',
+                 'setupapi']
+    boost_libraries = []
+    for lib in boost_libs:
+        boost_libraries += ['boost_'+lib+'-mgw48-mt-d-1_57']
+    libraries += boost_libraries
 else:
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
@@ -61,16 +66,10 @@ else:
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['make', 'baromesh', 'VERBOSE=1'])
-    libraries=[ 'baromesh',
-                'sfp', 
-                'rpc',
-                'robot-interface',
-                'dongle-interface',
-                'commontypes-proto',
-                'rpc-proto',
-                'boost_log',
-                'boost_thread',
-                'boost_system']
+    boost_libraries = []
+    for lib in boost_libs:
+        boost_libraries += ['boost_'+lib]
+    libraries += boost_libraries
 
 #Go back to our original directory
 os.chdir(origCWD)
@@ -90,7 +89,7 @@ try:
         ext_package='linkbot',
         ext_modules=[Extension('__linkbot', 
           sources=['_linkbot.i'],
-          swig_opts=['-threads', '-c++'],
+          swig_opts=['-threads', '-c++', '-v'],
           include_dirs=[
             os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh', 'include'),
             ],

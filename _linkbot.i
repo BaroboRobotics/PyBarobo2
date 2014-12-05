@@ -110,7 +110,7 @@ int linkbotDriveTo(Linkbot*, int mask, double j1, double j2, double j3);
 int linkbotStop(Linkbot*, int mask);
 
 int linkbotWriteEeprom(Linkbot* l, unsigned int address, const char* data, size_t size);
-int linkbotZZZ(Linkbot* l, unsigned int size);
+//int linkbotZZZ(Linkbot* l, unsigned int size);
 /* CALLBACKS */
 %{
 void PythonAccelerometerEventCallback(double x, double y, double z,
