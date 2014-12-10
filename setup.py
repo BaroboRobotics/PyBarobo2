@@ -12,7 +12,7 @@ import sys
 
 origCWD = os.getcwd()
 projDir = os.path.dirname(origCWD)
-#projDir = os.path.join(os.path.dirname(origCWD), 'BaroboBrowser')
+projDir = os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh')
 buildDir = os.path.join(origCWD, 'build-ext-'+ platform.platform())
 
 try:
@@ -94,10 +94,10 @@ try:
             os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh', 'include'),
             ],
           library_dirs=[
-            os.path.join(buildDir, 'BaroboBrowser','baromesh'),
-            os.path.join(buildDir, 'BaroboBrowser','libsfp'),
-            os.path.join(buildDir, 'BaroboBrowser','ribbon-bridge'),
-            os.path.join(buildDir, 'BaroboBrowser','ribbon-bridge-interfaces'),
+            os.path.join(buildDir),
+            os.path.join(buildDir, 'libsfp'),
+            os.path.join(buildDir, 'ribbon-bridge'),
+            os.path.join(buildDir, 'ribbon-bridge-interfaces'),
             os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib'),
             buildDir],
           libraries=libraries,
