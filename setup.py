@@ -38,13 +38,13 @@ libraries=[ 'baromesh',
             'rpc-proto' ]
 
 if platform.system() == 'Windows':
+    mingw_version='49'
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
         subprocess.check_call([
                 'cmake', 
                 '-G', 'MinGW Makefiles', 
-                '-DCMAKE_CXX_FLAGS="-fPIC -static-libgcc -static-stdc++"', 
-                '-DCMAKE_EXE_LINKER_FLAGS="-static-libgcc -static-stdc++"',
+                '-DCMAKE_CXX_FLAGS=-fPIC', 
                 '-DBUILD_SHARED_LIBS=OFF',
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
@@ -53,7 +53,7 @@ if platform.system() == 'Windows':
                  'setupapi']
     boost_libraries = []
     for lib in boost_libs:
-        boost_libraries += ['boost_'+lib+'-mgw48-mt-d-1_57']
+        boost_libraries += ['boost_'+lib+'-mgw'+mingw_version+'-mt-1_57']
     libraries += boost_libraries
 else:
     # Build our C/C++ library into our tempdir staging directory
