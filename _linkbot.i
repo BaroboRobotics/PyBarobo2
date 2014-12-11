@@ -79,6 +79,7 @@ int linkbotSetBuzzerFrequencyOn(Linkbot *l, float freq);
 int linkbotSetEncoderEventThreshold(Linkbot *l, int jointNo, double thresh);
 int linkbotSetJointSpeeds(Linkbot *l, int mask, double j1, double j2, 
                           double j3);
+int linkbotSetLedColor(Linkbot *l, int r, int g, int b );
 
 /* MOVEMENT */
 /*
@@ -244,6 +245,7 @@ int linkbotSetPythonJointEventCallback(Linkbot* l, PyObject *pyfunc);
 int linkbotUnsetPythonJointEventCallback(Linkbot* l);
 
 %{
+    #if 0
 #ifdef _WIN32
 #include<windows.h>
 #include<iostream>
@@ -283,4 +285,5 @@ extern "C" {
         return TRUE;  // Successful DLL_PROCESS_ATTACH.
     }
 #endif
+    #endif
 %}

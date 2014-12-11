@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
+for i in range(100):
+    try:
+        from linkbot import _linkbot as _L
+        break
+    except ImportError:
+        pass
+
 from linkbot import _linkbot as _L
+
 import time
 import threading
 import functools
@@ -50,22 +58,24 @@ class Linkbot:
         def wait(self, timeout=None):
             self._lock.wait(timeout)
 
-    def __init__(self, serialId):
+    def __init__(self, serialId = 'LOCL'):
         _L.linkbotPythonInit()
-        self.__impl = _L.linkbotNew(serialId)
+        self.__serialId = serialId
         self._jointStates = Linkbot.JointStates()
         self.__accelCb = None
         self.__encoderCb = None
         self.__jointCb = None
         self.__buttonCb = None
-        time.sleep(2)
 
 # Connection
 
-    def connect(self):
+    def connect(self, serialId = None):
         '''
         Connect to the robot.
         '''
+        if serialId is not None:
+            self.__serialId = serialId
+        self.__impl = _L.linkbotNew(self.__serialId)
         # Enable joint event callbacks
         _L.linkbotConnect(self.__impl)
         self._formFactor = self.getFormFactor()
@@ -216,6 +226,9 @@ class Linkbot:
         rc = _L.linkbotSetJointSpeeds(self.__impl, mask, s1, s2, s3)
         assert(rc == 0)
 
+    def setLedColor(self, r, g, b):
+        rc = _L.linkbotSetLedColor(self.__impl, r, g, b)
+    
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
         self.driveNB(j1, j2, j3, mask)

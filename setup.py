@@ -27,7 +27,7 @@ except Exception as e:
 # Go to the build directory
 os.chdir(buildDir)
 
-boost_libs = ['log', 'thread', 'system', 'coroutine', 'context']
+boost_libs = ['log', 'thread', 'system', 'filesystem']
 
 libraries=[ 'baromesh',
             'daemon-interface', 
@@ -44,17 +44,22 @@ if platform.system() == 'Windows':
         subprocess.check_call([
                 'cmake', 
                 '-G', 'MinGW Makefiles', 
-                '-DCMAKE_CXX_FLAGS=-fPIC', 
+                #'-DCMAKE_CXX_FLAGS=-fPIC -DBOOST_ALL_DYN_LINK', 
                 '-DBUILD_SHARED_LIBS=OFF',
-                '-DCMAKE_BUILD_TYPE=Debug',
+                '-DCMAKE_BUILD_TYPE=Release',
                 projDir])
     subprocess.check_call(['mingw32-make', 'baromesh', 'VERBOSE=1'])
-    libraries+=[ 'ws2_32',
+    libraries+=[ 'msvcr100',
+                 'ws2_32',
                  'setupapi']
     boost_libraries = []
     for lib in boost_libs:
         boost_libraries += ['boost_'+lib+'-mgw'+mingw_version+'-mt-1_57']
     libraries += boost_libraries
+    data_files = [('linkbot', 
+        [ 'dlls/libgcc_s_sjlj-1.dll',
+          'dlls/libstdc++-6.dll',
+          'dlls/libwinpthread-1.dll'])]
 else:
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
@@ -70,6 +75,7 @@ else:
     for lib in boost_libs:
         boost_libraries += ['boost_'+lib]
     libraries += boost_libraries
+    data_files = None
 
 #Go back to our original directory
 os.chdir(origCWD)
@@ -105,6 +111,7 @@ try:
         package_dir={'linkbot':''},
         py_modules=['linkbot._linkbot'],
         zip_safe = False,
+        data_files = data_files,
         )
 except Exception as e:
     print(e)
