@@ -67,6 +67,9 @@ class Linkbot:
         self.__jointCb = None
         self.__buttonCb = None
 
+    def __del__(self):
+        _L.linkbotDestroy(self.__impl)
+
 # Connection
 
     def connect(self, serialId = None):
@@ -76,7 +79,7 @@ class Linkbot:
         if serialId is not None:
             self.__serialId = serialId
         self.__impl = _L.linkbotNew(self.__serialId)
-        # Enable joint event callbacks
+        time.sleep(0.5)
         _L.linkbotConnect(self.__impl)
         self._formFactor = self.getFormFactor()
         if self._formFactor == Linkbot.FormFactor.I:
@@ -87,7 +90,9 @@ class Linkbot:
             self._motorMask = 0x07
         else:
             self._motorMask = 0x01
+        # Enable joint event callbacks
         self.enableJointEvents()
+
 
     def disconnect(self):
         '''

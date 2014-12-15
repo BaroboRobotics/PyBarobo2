@@ -30,6 +30,7 @@ void linkbotPythonInit(void);
 typedef struct Linkbot Linkbot;
 
 Linkbot* linkbotNew(const char* serialId);
+void linkbotDestroy(Linkbot* l);
 
 int linkbotConnect(Linkbot*);
 int linkbotDisconnect(Linkbot*);

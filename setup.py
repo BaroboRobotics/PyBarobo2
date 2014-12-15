@@ -46,7 +46,7 @@ if platform.system() == 'Windows':
                 '-G', 'MinGW Makefiles', 
                 #'-DCMAKE_CXX_FLAGS=-fPIC -DBOOST_ALL_DYN_LINK', 
                 '-DBUILD_SHARED_LIBS=OFF',
-                '-DCMAKE_BUILD_TYPE=Release',
+                '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['mingw32-make', 'baromesh', 'VERBOSE=1'])
     libraries+=[ 'msvcr100',
@@ -57,7 +57,7 @@ if platform.system() == 'Windows':
         boost_libraries += ['boost_'+lib+'-mgw'+mingw_version+'-mt-1_57']
     libraries += boost_libraries
     data_files = [('linkbot', 
-        [ 'dlls/libgcc_s_sjlj-1.dll',
+        [ 'dlls/libgcc_s_dw2-1.dll',
           'dlls/libstdc++-6.dll',
           'dlls/libwinpthread-1.dll'])]
 else:
@@ -107,6 +107,8 @@ try:
             os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib'),
             buildDir],
           libraries=libraries,
+          extra_compile_args=['-g'],
+          extra_link_args=['-g'],
           )],
         package_dir={'linkbot':''},
         py_modules=['linkbot._linkbot'],
