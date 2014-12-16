@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-
-for i in range(100):
-    try:
-        from linkbot import _linkbot as _L
-        break
-    except ImportError:
-        pass
+#!/usr/bin/env python3
 
 from linkbot import _linkbot as _L
 
