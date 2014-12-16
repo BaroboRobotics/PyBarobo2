@@ -27,7 +27,7 @@ except Exception as e:
 # Go to the build directory
 os.chdir(buildDir)
 
-boost_libs = ['log', 'thread', 'system', 'filesystem']
+boost_libs = ['log', 'thread', 'system', 'filesystem', 'python3']
 
 libraries=[ 'baromesh',
             'daemon-interface', 
@@ -93,11 +93,11 @@ try:
         url='http://www.barobo.com',
         packages=['demo'],
         ext_package='linkbot',
-        ext_modules=[Extension('__linkbot', 
-          sources=['_linkbot.i'],
-          swig_opts=['-threads', '-c++', '-v'],
+        ext_modules=[Extension('_linkbot', 
+          sources=['src/linkbot_wrapper.cpp'],
           include_dirs=[
             os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh', 'include'),
+            os.environ['BOOST_ROOT'],
             ],
           library_dirs=[
             os.path.join(buildDir),
@@ -107,11 +107,11 @@ try:
             os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib'),
             buildDir],
           libraries=libraries,
-          extra_compile_args=['-g'],
+          extra_compile_args=['-g', '-DBOOST_ALL_NO_LIB=1', '-DBOOST_PYTHON_SOURCE'],
           extra_link_args=['-g'],
           )],
         package_dir={'linkbot':''},
-        py_modules=['linkbot._linkbot'],
+        #py_modules=['linkbot._linkbot'],
         zip_safe = False,
         data_files = data_files,
         )
