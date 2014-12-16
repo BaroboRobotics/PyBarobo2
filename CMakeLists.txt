@@ -30,9 +30,15 @@ target_include_directories(_linkbot
     $<TARGET_PROPERTY:baromesh,INCLUDE_DIRECTORIES>
     ${PYTHON_INCLUDE_DIRS})
 
+if(WIN32)
+set_target_properties(_linkbot
+                      PROPERTIES SUFFIX ".pyd"
+                                 PREFIX "")
+else()
 set_target_properties(_linkbot
                       PROPERTIES SUFFIX ".so"
                                  PREFIX "")
+endif()
 
 target_link_libraries(_linkbot sfp cxx-util robot-interface
     dongle-interface baromesh rpc ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
