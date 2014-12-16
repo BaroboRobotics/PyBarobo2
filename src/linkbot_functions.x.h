@@ -1,0 +1,33 @@
+// CONNECTION 
+LINKBOT_FUNCTION(connect)
+LINKBOT_FUNCTION(disconnect)
+
+// MOVEMENT
+LINKBOT_FUNCTION(drive)
+LINKBOT_FUNCTION(driveTo)
+LINKBOT_FUNCTION(move)
+LINKBOT_FUNCTION(moveTo)
+LINKBOT_FUNCTION(motorPower)
+LINKBOT_FUNCTION(stop)
+
+// GETTERS
+LINKBOT_FUNCTION(getAccelerometer)
+LINKBOT_FUNCTION(getFormFactor)
+LINKBOT_FUNCTION(getJointAngles)
+LINKBOT_FUNCTION(getJointSpeeds)
+LINKBOT_FUNCTION(getJointStates)
+LINKBOT_FUNCTION(getLedColor)
+LINKBOT_FUNCTION(getVersions)
+
+// SETTERS
+LINKBOT_FUNCTION(setLedColor)
+LINKBOT_FUNCTION(setEncoderEventThreshold)
+LINKBOT_FUNCTION(setJointSpeeds)
+LINKBOT_FUNCTION(setJointStates)
+LINKBOT_FUNCTION(setBuzzerFrequencyOn)
+
+// CALLBACKS
+LINKBOT_FUNCTION(setAccelerometerEventCallback)
+LINKBOT_FUNCTION(setButtonEventCallback)
+LINKBOT_FUNCTION(setEncoderEventCallback)
+LINKBOT_FUNCTION(setJointEventCallback)

@@ -63,10 +63,10 @@ class Linkbot : public barobo::Linkbot
 
     void setButtonEventCallback(boost::python::object func)
     {
-        buttonEventCbObject = func;
+        m_buttonEventCbObject = func;
         barobo::Linkbot::setButtonEventCallback(
             &Linkbot::buttonEventCallback,
-            &buttonEventCbObject);
+            &m_buttonEventCbObject);
     }
 
     static void buttonEventCallback(int buttonNo,
@@ -89,16 +89,105 @@ class Linkbot : public barobo::Linkbot
         PyGILState_Release(gstate);
     }
 
+    void setEncoderEventCallback(boost::python::object func, float granularity)
+    {
+        m_encoderEventCbObject = func;
+        barobo::Linkbot::setEncoderEventCallback(
+            &Linkbot::encoderEventCallback,
+            granularity,
+            &m_encoderEventCbObject);
+    }
+
+    static void encoderEventCallback(int jointNo,
+                                     double anglePosition,
+                                     int timestamp,
+                                     void* userData)
+    {
+        /* Lock the Python GIL */
+        PyGILState_STATE gstate;
+        gstate = PyGILState_Ensure();
+
+        /* The userData should be a python object */
+        boost::python::object* func =
+            static_cast<boost::python::object*>(userData);
+        if(!func->is_none()) {
+            (*func)(jointNo, anglePosition, timestamp);
+        }
+
+        /* Release the Python GIL */
+        PyGILState_Release(gstate);
+    }
+
+    void setJointEventCallback(boost::python::object func)
+    {
+        m_jointEventCbObject = func;
+        barobo::Linkbot::setJointEventCallback(
+            &Linkbot::jointEventCallback,
+            &m_jointEventCbObject);
+    }
+
+    static void jointEventCallback(int jointNo, 
+                                   barobo::JointState::Type event,
+                                   int timestamp,
+                                   void* userData)
+    {
+        /* Lock the Python GIL */
+        PyGILState_STATE gstate;
+        gstate = PyGILState_Ensure();
+
+        /* The userData should be a python object */
+        boost::python::object* func =
+            static_cast<boost::python::object*>(userData);
+        if(!func->is_none()) {
+            (*func)(jointNo, static_cast<int>(event), timestamp);
+        }
+
+        /* Release the Python GIL */
+        PyGILState_Release(gstate);
+    }
+
+    void setAccelerometerEventCallback(boost::python::object func)
+    {
+        m_accelerometerEventCbObject = func;
+        barobo::Linkbot::setAccelerometerEventCallback(
+            &Linkbot::accelerometerEventCallback,
+            &m_accelerometerEventCbObject);
+    }
+
+    static void accelerometerEventCallback(double x,
+                                           double y,
+                                           double z,
+                                           int timestamp,
+                                           void* userData)
+    {
+        /* Lock the Python GIL */
+        PyGILState_STATE gstate;
+        gstate = PyGILState_Ensure();
+
+        /* The userData should be a python object */
+        boost::python::object* func =
+            static_cast<boost::python::object*>(userData);
+        if(!func->is_none()) {
+            (*func)(x, y, z, timestamp);
+        }
+
+        /* Release the Python GIL */
+        PyGILState_Release(gstate);
+    }
+
     private:
-        boost::python::object buttonEventCbObject;
+        boost::python::object m_buttonEventCbObject;
+        boost::python::object m_encoderEventCbObject;
+        boost::python::object m_jointEventCbObject;
+        boost::python::object m_accelerometerEventCbObject;
 };
 
 BOOST_PYTHON_MODULE(_linkbot)
 {
+    #define LINKBOT_FUNCTION(func) \
+    .def(#func, &Linkbot::func)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
-        .def("connect", &Linkbot::connect)
-        .def("move", &Linkbot::move)
-        .def("getJointAngles", &Linkbot::getJointAngles)
-        .def("setButtonEventCallback", &Linkbot::setButtonEventCallback)
+        #include"linkbot_functions.x.h"
         ;
+    #undef LINKBOT_FUNCTION
 }
