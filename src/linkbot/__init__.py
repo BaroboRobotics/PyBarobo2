@@ -4,6 +4,7 @@ from linkbot import _linkbot
 
 import time
 import threading
+import multiprocessing
 import functools
 
 class Linkbot (_linkbot.Linkbot):
@@ -32,7 +33,7 @@ class Linkbot (_linkbot.Linkbot):
         FAIL = 3
 
         def __init__(self):
-            self._lock = threading.Condition()
+            self._lock = multiprocessing.Condition()
             self._state = [self.STOP]*3
 
         def lock(self):
@@ -108,15 +109,6 @@ class Linkbot (_linkbot.Linkbot):
     def getJointSpeed(self, jointNo):
         return self.getJointSpeeds()[jointNo-1]
    
-    def getJointStates(self):
-        '''
-        Get the movement state for each of the joints.
-
-        @rtype: (Linkbot.JointStates, Linkbot.JointStates, Linkbot.JointStates)
-        '''
-        values = _L.linkbotGetJointStates(self.__impl)
-        return tuple(values[1:])
-
 # Setters
     def setBuzzerFrequency(self, freq):
         '''

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <thread>
 #include "baromesh/linkbot.hpp"
 #include <boost/python.hpp>
 
@@ -84,6 +85,19 @@ class Linkbot : public barobo::Linkbot
                                     int timestamp,
                                     void* userData)
     {
+        std::thread cbThread( &Linkbot::buttonEventCallbackThread,
+                              buttonNo,
+                              event,
+                              timestamp,
+                              userData);
+        cbThread.detach();
+    }
+
+    static void buttonEventCallbackThread(int buttonNo,
+                                    barobo::ButtonState::Type event,
+                                    int timestamp,
+                                    void* userData)
+    {
         /* Lock the Python GIL */
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
@@ -118,6 +132,19 @@ class Linkbot : public barobo::Linkbot
                                      int timestamp,
                                      void* userData)
     {
+        std::thread cbThread ( &Linkbot::encoderEventCallbackThread,
+                               jointNo,
+                               anglePosition,
+                               timestamp,
+                               userData );
+        cbThread.detach();
+    }
+
+    static void encoderEventCallbackThread(int jointNo,
+                                    double anglePosition,
+                                    int timestamp,
+                                    void* userData)
+    {
         /* Lock the Python GIL */
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
@@ -151,6 +178,19 @@ class Linkbot : public barobo::Linkbot
                                    int timestamp,
                                    void* userData)
     {
+        std::thread cbThread( &Linkbot::jointEventCallbackThread,
+                              jointNo,
+                              event,
+                              timestamp,
+                              userData);
+        cbThread.detach();
+    }
+
+    static void jointEventCallbackThread(int jointNo, 
+                                   barobo::JointState::Type event,
+                                   int timestamp,
+                                   void* userData)
+    {
         /* Lock the Python GIL */
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
@@ -180,6 +220,16 @@ class Linkbot : public barobo::Linkbot
     }
 
     static void accelerometerEventCallback(double x,
+                                           double y,
+                                           double z,
+                                           int timestamp,
+                                           void* userData)
+    {
+        std::thread cbThread( &Linkbot::accelerometerEventCallbackThread,
+                              x, y, z, timestamp, userData);
+    }
+
+    static void accelerometerEventCallbackThread(double x,
                                            double y,
                                            double z,
                                            int timestamp,
