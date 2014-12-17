@@ -22,7 +22,7 @@ class Linkbot : public barobo::Linkbot
         return boost::python::make_tuple(timestamp, x, y, z);
     }
 
-    barobo::FormFactor::Type getFormFactor() {
+    int getFormFactor() {
         barobo::FormFactor::Type form;
         barobo::Linkbot::getFormFactor(form);
         return form;
@@ -45,7 +45,12 @@ class Linkbot : public barobo::Linkbot
         int timestamp;
         barobo::JointState::Type j1, j2, j3;
         barobo::Linkbot::getJointStates(timestamp, j1, j2, j3);
-        return boost::python::make_tuple(timestamp, j1, j2, j3);
+        boost::python::tuple rc;
+        for (auto i : {j1,j2,j3}) {
+            rc += boost::python::make_tuple(static_cast<int>(i));
+            //boost::python::tuple_cat(rc, static_cast<int>(i));
+        }
+        return rc;
     }
     
     boost::python::tuple getLedColor() {
@@ -99,7 +104,7 @@ class Linkbot : public barobo::Linkbot
         m_encoderEventCbObject = func;
         if(func.is_none()) {
             barobo::Linkbot::setEncoderEventCallback(
-                    nullptr, nullptr);
+                    nullptr, granularity, nullptr);
         } else {
             barobo::Linkbot::setEncoderEventCallback(
                     &Linkbot::encoderEventCallback,
@@ -121,7 +126,7 @@ class Linkbot : public barobo::Linkbot
         boost::python::object* func =
             static_cast<boost::python::object*>(userData);
         if(!func->is_none()) {
-            (*func)(jointNo, anglePosition, timestamp);
+            (*func)(jointNo+1, anglePosition, timestamp);
         }
 
         /* Release the Python GIL */

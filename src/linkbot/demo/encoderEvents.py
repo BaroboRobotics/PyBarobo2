@@ -33,7 +33,7 @@ if __name__ == "__main__":
     myLinkbot.connect()
     myLinkbot.enableEncoderEvents(granularity=1.0)
     myLinkbot.drive(90, 90, 90)
-    myLinkbot.drive(-90, -90, -90)
+    #myLinkbot.drive(-90, -90, -90)
     myLinkbot.disableEncoderEvents()
     myLinkbot.plot()
 

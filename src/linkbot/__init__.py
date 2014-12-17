@@ -134,7 +134,7 @@ class Linkbot (_linkbot.Linkbot):
         @param jointNo: The joint to set the speed. Should be 1, 2, or 3.
         @param speed: The requested speed of the joint, in degrees/second.
         '''
-        self.setJointSpeeds(1<<(jointNo-1) speed, speed, speed )
+        self.setJointSpeeds(1<<(jointNo-1), speed, speed, speed )
     
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
@@ -275,6 +275,9 @@ class Linkbot (_linkbot.Linkbot):
         '''
         self.stop(1<<(jointNo-1))
 
+    def stop(self, mask=0x07):
+        _linkbot.Linkbot.stop(self, mask)
+
     # CALLBACKS
 
     def disableAccelerometerEvents(self):
@@ -293,7 +296,7 @@ class Linkbot (_linkbot.Linkbot):
         '''
         Make the robot stop reporting encoder change events.
         '''
-        self.setEncoderEventCallback(None)
+        self.setEncoderEventCallback(None, 20)
 
     def disableJointEvents(self):
         '''
