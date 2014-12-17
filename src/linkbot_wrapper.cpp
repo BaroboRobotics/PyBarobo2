@@ -64,9 +64,14 @@ class Linkbot : public barobo::Linkbot
     void setButtonEventCallback(boost::python::object func)
     {
         m_buttonEventCbObject = func;
-        barobo::Linkbot::setButtonEventCallback(
-            &Linkbot::buttonEventCallback,
-            &m_buttonEventCbObject);
+        if(func.is_none()) {
+            barobo::Linkbot::setButtonEventCallback(
+                    nullptr, nullptr);
+        } else {
+            barobo::Linkbot::setButtonEventCallback(
+                    &Linkbot::buttonEventCallback,
+                    &m_buttonEventCbObject);
+        }
     }
 
     static void buttonEventCallback(int buttonNo,
@@ -92,10 +97,15 @@ class Linkbot : public barobo::Linkbot
     void setEncoderEventCallback(boost::python::object func, float granularity)
     {
         m_encoderEventCbObject = func;
-        barobo::Linkbot::setEncoderEventCallback(
-            &Linkbot::encoderEventCallback,
-            granularity,
-            &m_encoderEventCbObject);
+        if(func.is_none()) {
+            barobo::Linkbot::setEncoderEventCallback(
+                    nullptr, nullptr);
+        } else {
+            barobo::Linkbot::setEncoderEventCallback(
+                    &Linkbot::encoderEventCallback,
+                    granularity,
+                    &m_encoderEventCbObject);
+        }
     }
 
     static void encoderEventCallback(int jointNo,
@@ -121,9 +131,14 @@ class Linkbot : public barobo::Linkbot
     void setJointEventCallback(boost::python::object func)
     {
         m_jointEventCbObject = func;
-        barobo::Linkbot::setJointEventCallback(
-            &Linkbot::jointEventCallback,
-            &m_jointEventCbObject);
+        if(func.is_none()) {
+            barobo::Linkbot::setJointEventCallback(
+                    nullptr, nullptr);
+        } else {
+            barobo::Linkbot::setJointEventCallback(
+                    &Linkbot::jointEventCallback,
+                    &m_jointEventCbObject);
+        }
     }
 
     static void jointEventCallback(int jointNo, 
@@ -149,9 +164,14 @@ class Linkbot : public barobo::Linkbot
     void setAccelerometerEventCallback(boost::python::object func)
     {
         m_accelerometerEventCbObject = func;
-        barobo::Linkbot::setAccelerometerEventCallback(
-            &Linkbot::accelerometerEventCallback,
-            &m_accelerometerEventCbObject);
+        if(func.is_none()) {
+            barobo::Linkbot::setAccelerometerEventCallback(
+                    nullptr, nullptr);
+        } else {
+            barobo::Linkbot::setAccelerometerEventCallback(
+                    &Linkbot::accelerometerEventCallback,
+                    &m_accelerometerEventCbObject);
+        }
     }
 
     static void accelerometerEventCallback(double x,
@@ -184,8 +204,8 @@ class Linkbot : public barobo::Linkbot
 
 BOOST_PYTHON_MODULE(_linkbot)
 {
-    #define LINKBOT_FUNCTION(func) \
-    .def(#func, &Linkbot::func)
+    #define LINKBOT_FUNCTION(func, docstring) \
+    .def(#func, &Linkbot::func, docstring)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
         #include"linkbot_functions.x.h"
         ;

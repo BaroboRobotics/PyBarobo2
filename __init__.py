@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from linkbot import _linkbot as _L
+from linkbot import _linkbot 
 
 import time
 import threading
 import functools
 
-class Linkbot:
+class Linkbot (_linkbot.Linkbot):
     '''
     The Linkbot class.
 
@@ -52,7 +52,7 @@ class Linkbot:
             self._lock.wait(timeout)
 
     def __init__(self, serialId = 'LOCL'):
-        _L.linkbotPythonInit()
+        _linkbot.Linkbot.__init__(self, serialId)
         self.__serialId = serialId
         self._jointStates = Linkbot.JointStates()
         self.__accelCb = None
@@ -60,20 +60,13 @@ class Linkbot:
         self.__jointCb = None
         self.__buttonCb = None
 
-    def __del__(self):
-        _L.linkbotDestroy(self.__impl)
-
 # Connection
 
     def connect(self, serialId = None):
         '''
         Connect to the robot.
         '''
-        if serialId is not None:
-            self.__serialId = serialId
-        self.__impl = _L.linkbotNew(self.__serialId)
-        time.sleep(0.5)
-        _L.linkbotConnect(self.__impl)
+        _linkbot.Linkbot.connect(self)
         self._formFactor = self.getFormFactor()
         if self._formFactor == Linkbot.FormFactor.I:
             self._motorMask = 0x05
@@ -87,46 +80,7 @@ class Linkbot:
         self.enableJointEvents()
 
 
-    def disconnect(self):
-        '''
-        Disconnect from the robot.
-        '''
-        _L.linkbotDisconnect(self.__impl)
-
 # Getters
-
-    def getAccelerometerData(self):
-        '''
-        Get the current accelerometer readings. 
-
-        Example::
-
-            x, y, z = robot.getAccelerometerData()
-
-        @rtype: (number, number, number)
-        @return: A list of acceleration values in the x, y, and z directions. 
-                 Accelerometer values are in units of "G's", where 1 G
-                 is standard earth gravitational acceleration (9.8m/s/s) 
-        '''
-        values = _L.linkbotGetAccelerometer(self.__impl)
-        assert(values[0] == 0)
-        return tuple(values[2:])
-
-    def getFormFactor(self):
-        '''
-        Get the robot's form factor. 
-
-        @rtype: linkbot.Linkbot.FormFactor()
-        @return: A number indicating the form factor. An enumeration class 
-                 called Linkbot.FormFactor is available. The return value is one
-                 of:
-                    - 0 -> Linkbot-I
-                    - 1 -> Linkbot-L
-                    - 2 -> Linkbot-T
-        '''
-        values = _L.linkbotGetFormFactor(self.__impl)
-        assert(values[0] == 0)
-        return values[1]
 
     def getJointAngle(self, jointNo):
         '''
@@ -148,26 +102,12 @@ class Linkbot:
                  for joints which are not movable (i.e. joint 2 on a Linkbot-I)
                  are always zero.
         '''
-        values = _L.linkbotGetJointAngles(self.__impl)
-        assert(values[0] == 0)
-        return tuple(values[2:])
+        values = _linkbot.Linkbot.linkbotGetJointAngles(self)
+        return tuple(values[1:])
 
     def getJointSpeed(self, jointNo):
         return self.getJointSpeeds()[jointNo-1]
    
-    def getJointSpeeds(self):
-        '''
-        Get the current joint speed settings.
-
-        @rtype: (number, number, number)
-        @return: Returned values are in degrees/second. Note that the values are
-        the speed settings of each joint; not the actual speed the joint is
-        currently moving at.
-        '''
-        values = _L.linkbotGetJointSpeeds(self.__impl)
-        assert(values[0] == 0)
-        return tuple(values[1:])
-    
     def getJointStates(self):
         '''
         Get the movement state for each of the joints.
@@ -175,20 +115,6 @@ class Linkbot:
         @rtype: (Linkbot.JointStates, Linkbot.JointStates, Linkbot.JointStates)
         '''
         values = _L.linkbotGetJointStates(self.__impl)
-        assert(values[0] == 0)
-        return tuple(values[2:])
-
-    def getLedColor(self):
-        '''
-        Get the current color of the Linkbot's multi-color LED.
-
-        @rtype: (number, number, number)
-        @return: Each value in the returned tuple is the intensity of the red,
-                 green, and blue channels, respectively. Each value is a number
-                 between 0 - 255.
-        '''
-        values = _L.linkbotGetLedColor(self.__impl)
-        assert(values[0] == 0)
         return tuple(values[1:])
 
 # Setters
@@ -199,8 +125,7 @@ class Linkbot:
 
         @param freq: The frequency to set the buzzer, in Hertz.
         '''
-        rc = _L.linkbotSetBuzzerFrequencyOn(self.__impl, freq)
-        assert(rc == 0)
+        _linkbot.Linkbot.linkbotSetBuzzerFrequencyOn(freq)
 
     def setJointSpeed(self, jointNo, speed):
         '''
@@ -209,23 +134,7 @@ class Linkbot:
         @param jointNo: The joint to set the speed. Should be 1, 2, or 3.
         @param speed: The requested speed of the joint, in degrees/second.
         '''
-        self.setJointSpeeds(speed, speed, speed, 1<<(jointNo-1))
-
-    def setJointSpeeds(self, s1, s2, s3, mask=0x07):
-        '''
-        Set the speed of each joint on the robot. 
-
-        @param s1, s2, s3: The requested speed of each joint, in degrees/second.
-            The values should be in the range (-200, 200). Negative speeds
-            indicate that the joint will move in the negative direction when
-            using the "moveContinuous()" function, but all other movement
-            functions will use the absolute value of the speed.
-        '''
-        rc = _L.linkbotSetJointSpeeds(self.__impl, mask, s1, s2, s3)
-        assert(rc == 0)
-
-    def setLedColor(self, r, g, b):
-        rc = _L.linkbotSetLedColor(self.__impl, r, g, b)
+        self.setJointSpeeds(1<<(jointNo-1) speed, speed, speed )
     
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
@@ -233,8 +142,7 @@ class Linkbot:
         self.moveWait(mask)
 
     def driveNB(self, j1, j2, j3, mask=0x07):
-        rc = _L.linkbotDrive(self.__impl, mask, j1, j2, j3)
-        assert(rc == 0)
+        _linkbot.Linkbot.drive(self, mask, j1, j2, j3)
 
     def driveJoint(self, jointNo, angle):
         self.driveJointNB(jointNo, angle)
@@ -255,8 +163,7 @@ class Linkbot:
         self.moveWait(mask)
         
     def driveToNB(self, j1, j2, j3, mask=0x07):
-        rc = _L.linkbotDriveTo(self.__impl, mask, j1, j2, j3)
-        assert(rc == 0)
+        _linkbot.Linkbot.driveTo(self, mask, j1, j2, j3)
     
     def move(self, j1, j2, j3, mask=0x07):
         '''
@@ -282,8 +189,7 @@ class Linkbot:
         robot.setLEDColor(0, 0, 255)
 
         '''
-        rc = _L.linkbotMove(self.__impl, mask, j1, j2, j3)
-        assert(rc == 0)
+        _linkbot.Linkbot.move(self, mask, j1, j2, j3)
 
     def moveContinuous(self, dir1, dir2, dir3, mask=0x07):
         '''
@@ -300,8 +206,7 @@ class Linkbot:
                   whatever speed the joint was last set to with the
                   setJointSpeeds() function.
         '''
-        rc = _L.linkbotMoveContinuous(self.__impl, mask, dir1, dir2, dir3)
-        assert(rc == 0)
+        _linkbot.Linkbot.moveContinuous(self, mask, dir1, dir2, dir3)
 
     def moveJoint(self, jointNo, angle):
         '''
@@ -331,7 +236,7 @@ class Linkbot:
         '''
         assert (jointNo >= 1 and jointNo <= 3)
         mask = 1<<(jointNo-1)
-        _L.linkbotMove(self.__impl, mask, angle, angle, angle)
+        self.moveNB(angle, angle, angle, mask)
 
     def moveJointWait(self, jointNo):
         '''
@@ -354,7 +259,7 @@ class Linkbot:
         '''
         mask = mask & self._motorMask
         self._jointStates.lock()
-        states = _L.linkbotGetJointStates(self.__impl)[2:]
+        states = _linkbot.Linkbot.getJointStates(self)[1:]
         for s,i in zip(states, range(len(states))):
             self._jointStates.set_state(i, s)
 
@@ -363,14 +268,6 @@ class Linkbot:
                 while self._jointStates.state(i) == Linkbot.JointStates.MOVING:
                     self._jointStates.wait()
         self._jointStates.unlock()
-
-    def stop(self, mask = 0x07):
-        '''
-        Stop a motor or motors on a robot, immediately making the motors
-        coast. 
-        '''
-        rc = _L.linkbotStop(self.__impl, mask)
-        assert(rc == 0)
 
     def stopJoint(self, jointNo):
         '''
@@ -384,29 +281,29 @@ class Linkbot:
         '''
         Make the robot stop reporting accelerometer change events.
         '''
-        rc = _L.linkbotUnsetPythonAccelerometerEventCallback(self.__impl)
-        assert(rc == 0)
+        self.setAccelerometerEventCallback(None)
 
     def disableButtonEvents(self):
         '''
         Make the robot stop reporting button change events.
         '''
-        rc = _L.linkbotUnsetPythonButtonEventCallback(self.__impl)
-        assert(rc == 0)
+        self.setButtonEventCallback(None)
 
     def disableEncoderEvents(self):
         '''
         Make the robot stop reporting encoder change events.
         '''
-        rc = _L.linkbotUnsetPythonEncoderEventCallback(self.__impl)
-        assert(rc == 0)
+        self.setEncoderEventCallback(None)
 
     def disableJointEvents(self):
         '''
         Make the robot stop reporting joint status change events.
         '''
-        rc = _L.linkbotUnsetPythonJointEventCallback(self.__impl)
-        assert(rc == 0)
+        # Here, we don't actually want to disable the C++ level callbacks
+        # because that will break moveWait(), which requires the C++ level
+        # callbacks to be running. Instead, we just set our user level callback
+        # object to None.
+        self.__jointCb = None
 
     def enableAccelerometerEvents(self, cb=None):
         '''
@@ -419,9 +316,8 @@ class Linkbot:
         accelerometer events are received. The callback function prototype
         should be cb(x, y, z, timestamp)
         '''
-        _L.linkbotSetPythonAccelerometerEventCallback(self.__impl,
-            self.accelerometerEventCB)
         self.__accelCb = cb
+        self.setAccelerometerEventCallback(self.accelerometerEventCB)
 
     def enableEncoderEvents(self, granularity=20.0, cb=None):
         '''
@@ -436,10 +332,8 @@ class Linkbot:
         @param cb: (optional) The callback function to handle the event. The
         function prototype should be cb(jointNo, angle, timestamp)
         '''
-        _L.linkbotSetPythonEncoderEventCallback(self.__impl, 
-                                                granularity, 
-                                                self.encoderEventCB)
         self.__encoderCb = cb
+        self.setEncoderEventCallback(self.encoderEventCB, granularity)
 
     def enableButtonEvents(self, cb=None):
         '''
@@ -450,12 +344,12 @@ class Linkbot:
         @param cb: (optional) A callback function with the prototype
         cb(ButtonNo, buttonState, timestamp)
         '''
-        _L.linkbotSetPythonButtonEventCallback(self.__impl, self.buttonEventCB)
         self.__buttonCb = cb
+        self.setButtonEventCallback(self.buttonEventCB)
 
     def enableJointEvents(self, cb=None):
-        _L.linkbotSetPythonJointEventCallback(self.__impl, self.jointEventCB)
         self.__jointCb = cb
+        self.setJointEventCallback(self.jointEventCB)
 
     def buttonEventCB(self, buttonNo, state, timestamp):
         if self.__buttonCb is not None:
