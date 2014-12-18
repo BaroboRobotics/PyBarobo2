@@ -14,17 +14,27 @@ if __name__ == "__main__":
 
     speed = -90
     myLinkbot.setJointSpeed(1, speed)
+    myLinkbot.setJointSpeed(3, speed)
     myLinkbot.moveContinuous(
         linkbot.Linkbot.JointStates.MOVING,
-        0,
-        0,
-        1
+        linkbot.Linkbot.JointStates.STOP,
+        linkbot.Linkbot.JointStates.STOP,
         )
 
     while speed < 90:
         speed += 1
         myLinkbot.setJointSpeed(1, speed)
-        #time.sleep(0.2)
+
+    myLinkbot.moveContinuous(
+        linkbot.Linkbot.JointStates.STOP,
+        linkbot.Linkbot.JointStates.STOP,
+        linkbot.Linkbot.JointStates.MOVING,
+        )
+
+    speed = -90
+    while speed < 90:
+        speed += 1
+        myLinkbot.setJointSpeed(3, speed)
 
     myLinkbot.stop()
 

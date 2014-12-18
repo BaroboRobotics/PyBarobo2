@@ -126,7 +126,10 @@ class Linkbot (_linkbot.Linkbot):
         @param jointNo: The joint to set the speed. Should be 1, 2, or 3.
         @param speed: The requested speed of the joint, in degrees/second.
         '''
-        self.setJointSpeeds(1<<(jointNo-1), speed, speed, speed )
+        self.setJointSpeeds(speed, speed, speed, mask=(1<<(jointNo-1)) )
+
+    def setJointSpeeds(self, s1, s2, s3, mask=0x07):
+        _linkbot.Linkbot.setJointSpeeds(self, mask, s1, s2, s3)
     
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
