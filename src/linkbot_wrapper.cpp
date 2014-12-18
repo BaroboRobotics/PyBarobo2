@@ -43,13 +43,13 @@ class Linkbot : public barobo::Linkbot
     }
     
     boost::python::tuple getJointStates() {
-        int timestamp;
+        int timestamp = 0;
         barobo::JointState::Type j1, j2, j3;
         barobo::Linkbot::getJointStates(timestamp, j1, j2, j3);
         boost::python::tuple rc;
+        rc += boost::python::make_tuple(timestamp);
         for (auto i : {j1,j2,j3}) {
             rc += boost::python::make_tuple(static_cast<int>(i));
-            //boost::python::tuple_cat(rc, static_cast<int>(i));
         }
         return rc;
     }
