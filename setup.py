@@ -14,6 +14,7 @@ projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
 # projDir = os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh')
 buildDir = os.path.join(projDir, 'build-ext-'+ platform.platform())
+stageDir = os.path.join(projDir, 'stage-'+ platform.platform())
 
 try:
     if not os.path.isdir(buildDir):
@@ -24,18 +25,25 @@ except Exception as e:
     print('Aborting build...')
     sys.exit(0)
 
+try:
+    try:
+        shutil.rmtree(stageDir)
+    except:
+        pass
+    if not os.path.isdir(stageDir):
+        os.mkdir(stageDir)
+except Exception as e:
+    print('Could not create staging directory:')
+    print(stageDir)
+    print('Aborting build...')
+    sys.exit(0)
+
+# Copy modules to staging directory
+shutil.copytree(os.path.join(projDir, 'src', 'linkbot'), 
+    os.path.join(stageDir, 'linkbot'))
+
 # Go to the build directory
 os.chdir(buildDir)
-
-boost_libs = ['log', 'thread', 'system', 'filesystem', 'python3']
-
-libraries=[ 'baromesh',
-            'daemon-interface', 
-            'sfp', 
-            'rpc',
-            'robot-interface',
-            'commontypes-proto',
-            'rpc-proto' ]
 
 if platform.system() == 'Windows':
     mingw_version='49'
@@ -44,24 +52,15 @@ if platform.system() == 'Windows':
         subprocess.check_call([
                 'cmake', 
                 '-G', 'MinGW Makefiles', 
-                #'-DCMAKE_CXX_FLAGS=-fPIC -DBOOST_ALL_DYN_LINK', 
-                '-DBUILD_SHARED_LIBS=OFF',
-                '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['mingw32-make', 'VERBOSE=1'])
-    libraries+=[ 'msvcr100',
-                 'ws2_32',
-                 'setupapi']
-    boost_libraries = []
-    for lib in boost_libs:
-        boost_libraries += ['boost_'+lib+'-mgw'+mingw_version+'-mt-1_57']
-    libraries += boost_libraries
-    data_files = [('linkbot', 
-        [ 'dlls/libgcc_s_dw2-1.dll',
-          'dlls/libstdc++-6.dll',
-          'dlls/libwinpthread-1.dll',
-          os.path.join(buildDir, '_linkbot.pyd'), 
-          ])]
+    shutil.copy(os.path.join(buildDir, '_linkbot.pyd'),
+        os.path.join(projDir, 'src','linkbot', '_linkbot.pyd'))
+    dlls = ['libgcc_s_dw2-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll']
+    for dll in dlls:
+        shutil.copy(os.path.join(projDir, 'dlls', dll),
+            os.path.join(stageDir, 'linkbot', dll))
+    package_data = {'linkbot': ['_linkbot.pyd']+dlls}
 else:
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
@@ -73,11 +72,9 @@ else:
                 '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['make', 'VERBOSE=1'])
-    boost_libraries = []
-    for lib in boost_libs:
-        boost_libraries += ['boost_'+lib]
-    libraries += boost_libraries
-    data_files = [('linkbot', [os.path.join(buildDir, '_linkbot.so')])]
+    shutil.copy(os.path.join(buildDir, '_linkbot.so'),
+        os.path.join(stageDir, 'linkbot', '_linkbot.so'))
+    package_data = {'linkbot': ['_linkbot.so']}
 
 #Go back to our original directory
 os.chdir(projDir)
@@ -96,8 +93,9 @@ try:
         url='http://www.barobo.com',
         packages=['linkbot.demo', 'linkbot'],
         ext_package='linkbot',
-        data_files = data_files,
-        package_dir={'':'src'},
+        #data_files = data_files,
+        package_data = package_data,
+        package_dir={'':stageDir},
         #py_modules=['linkbot._linkbot'],
         zip_safe = False,
         ext_modules=[Extension('__stub', sources=['src/stub.cpp'])]
