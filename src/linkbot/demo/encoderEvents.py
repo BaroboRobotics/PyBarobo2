@@ -29,7 +29,6 @@ if __name__ == "__main__":
         quit()
     serialID = sys.argv[1]
     myLinkbot = EncoderLinkbot(serialID)
-    time.sleep(2)
     myLinkbot.connect()
     myLinkbot.enableEncoderEvents(granularity=1.0)
     myLinkbot.drive(90, 90, 90)
