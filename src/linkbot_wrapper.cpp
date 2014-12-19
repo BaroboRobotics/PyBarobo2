@@ -18,6 +18,10 @@ class Linkbot : public barobo::Linkbot
 
     ~Linkbot()
     {
+        barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setEncoderEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
         disconnect();
         m_jointEventCbThread.join();
     }

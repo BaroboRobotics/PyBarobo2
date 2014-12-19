@@ -32,4 +32,3 @@ if __name__ == "__main__":
     print('Moving motor 1 -90 degrees...')
     myLinkbot.driveJoint(1, -90)
 
-    time.sleep(2)
