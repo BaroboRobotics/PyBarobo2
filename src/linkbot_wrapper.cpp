@@ -227,6 +227,7 @@ class Linkbot : public barobo::Linkbot
     {
         std::thread cbThread( &Linkbot::accelerometerEventCallbackThread,
                               x, y, z, timestamp, userData);
+        cbThread.detach();
     }
 
     static void accelerometerEventCallbackThread(double x,
