@@ -6,6 +6,7 @@ import time
 import threading
 import multiprocessing
 import functools
+import atexit
 
 class Linkbot (_linkbot.Linkbot):
     '''
@@ -60,6 +61,7 @@ class Linkbot (_linkbot.Linkbot):
         self.__encoderCb = None
         self.__jointCb = None
         self.__buttonCb = None
+        atexit.register(self._releaseCallbacks)
 
 # Connection
 
@@ -77,8 +79,6 @@ class Linkbot (_linkbot.Linkbot):
             self._motorMask = 0x07
         else:
             self._motorMask = 0x01
-        # Enable joint event callbacks
-        self.enableJointEvents()
 
 
 # Getters
@@ -239,30 +239,6 @@ class Linkbot (_linkbot.Linkbot):
         '''
         assert(jointNo >= 1 and jointNo <=3)
         self.moveWait(1<<(jointNo-1))
-
-    def moveWait(self, mask = 0x07):
-        '''
-        Wait for one or more joints to finish moving.
-
-        If called with no arguments, wait for all joints to finish moving. The
-        'mask' parameter is a bitmask and can be used to specify which joint(s)
-        to wait for. i.e. ::
-
-            robot.moveWait(0x01) # Only wait for joint 1
-            robot.moveWait(0x03) # 0x03 is 0b011 in binary, so wait for joints 1
-                                 # and 2 to finish moving.
-        '''
-        mask = mask & self._motorMask
-        self._jointStates.lock()
-        states = _linkbot.Linkbot.getJointStates(self)[1:]
-        for s,i in zip(states, range(len(states))):
-            self._jointStates.set_state(i, s)
-
-        for i in range(3):
-            if (1<<i) & mask:
-                while self._jointStates.state(i) == Linkbot.JointStates.MOVING:
-                    self._jointStates.wait()
-        self._jointStates.unlock()
 
     def stopJoint(self, jointNo):
         '''

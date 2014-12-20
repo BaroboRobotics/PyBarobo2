@@ -23,6 +23,9 @@ class AccelLinkbot (linkbot.Linkbot):
         
 
 if __name__ == "__main__":
+    dongle = linkbot.Linkbot('4QFS')
+    dongle.connect()
+
     if len(sys.argv) < 2:
         print ("Usage: {0} <Linkbot Serial ID>".format(sys.argv[0]))
         quit()
