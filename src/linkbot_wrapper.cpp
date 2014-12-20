@@ -1,5 +1,7 @@
 #include <cmath>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include "baromesh/linkbot.hpp"
 #include <boost/python.hpp>
 
@@ -15,6 +17,18 @@ class Linkbot : public barobo::Linkbot
             PyEval_InitThreads();
         }
     }
+
+    void connect()
+    {
+        barobo::Linkbot::connect();
+
+        /* Set up the joint event callback for moveWait() */
+        barobo::Linkbot::setJointEventCallback(
+                &Linkbot::jointEventCallback,
+                this);
+    }
+
+/* GETTERS */
 
     boost::python::tuple getAccelerometer() {
         int timestamp; 
@@ -66,6 +80,38 @@ class Linkbot : public barobo::Linkbot
         barobo::Linkbot::getVersions(v1, v2, v3);
         return boost::python::make_tuple(v1, v2, v3);
     }
+
+/* MOVEMENT */
+
+    void moveWait(int mask=0x07)
+    {
+        std::unique_lock<std::mutex> lock(m_jointStatesLock);
+        int timestamp;
+        barobo::Linkbot::getJointStates(timestamp, 
+                       m_jointStates[0],
+                       m_jointStates[1],
+                       m_jointStates[2]);
+        Py_BEGIN_ALLOW_THREADS
+        m_jointStatesCv.wait(lock, 
+            [this, mask] {
+                bool moving = false;
+                int jointmask = 1;
+                for(auto& s : m_jointStates) {
+                    if(mask&jointmask) {
+                        if(s == barobo::JointState::MOVING) {
+                            moving = true;
+                            break;
+                        }
+                    }
+                    jointmask <<= 1;
+                }
+                return !moving;
+            }
+            );
+        Py_END_ALLOW_THREADS
+    }
+
+/* CALLBACKS */
 
     void setButtonEventCallback(boost::python::object func)
     {
@@ -163,14 +209,6 @@ class Linkbot : public barobo::Linkbot
     void setJointEventCallback(boost::python::object func)
     {
         m_jointEventCbObject = func;
-        if(func.is_none()) {
-            barobo::Linkbot::setJointEventCallback(
-                    nullptr, nullptr);
-        } else {
-            barobo::Linkbot::setJointEventCallback(
-                    &Linkbot::jointEventCallback,
-                    &m_jointEventCbObject);
-        }
     }
 
     static void jointEventCallback(int jointNo, 
@@ -178,32 +216,25 @@ class Linkbot : public barobo::Linkbot
                                    int timestamp,
                                    void* userData)
     {
-        std::thread cbThread( &Linkbot::jointEventCallbackThread,
-                              jointNo,
-                              event,
-                              timestamp,
-                              userData);
-        cbThread.detach();
-    }
+        auto l = static_cast<Linkbot*>(userData);
 
-    static void jointEventCallbackThread(int jointNo, 
-                                   barobo::JointState::Type event,
-                                   int timestamp,
-                                   void* userData)
-    {
-        /* Lock the Python GIL */
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
+        std::unique_lock<std::mutex> lock(l->m_jointStatesLock);
+        l->m_jointStates[jointNo] = event;
+        l->m_jointStatesCv.notify_all();
+        lock.unlock();
 
-        /* The userData should be a python object */
-        boost::python::object* func =
-            static_cast<boost::python::object*>(userData);
-        if(!func->is_none()) {
-            (*func)(jointNo, static_cast<int>(event), timestamp);
+        auto &func = l->m_jointEventCbObject;
+        if(!func.is_none()) {
+            /* Lock the Python GIL */
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
+
+            (func)(jointNo, static_cast<int>(event), timestamp);
+
+            /* Release the Python GIL */
+            PyGILState_Release(gstate);
         }
 
-        /* Release the Python GIL */
-        PyGILState_Release(gstate);
     }
 
     void setAccelerometerEventCallback(boost::python::object func)
@@ -256,6 +287,10 @@ class Linkbot : public barobo::Linkbot
         boost::python::object m_encoderEventCbObject;
         boost::python::object m_jointEventCbObject;
         boost::python::object m_accelerometerEventCbObject;
+
+        barobo::JointState::Type m_jointStates[3];
+        std::mutex m_jointStatesLock;
+        std::condition_variable m_jointStatesCv;
 };
 
 BOOST_PYTHON_MODULE(_linkbot)
@@ -264,6 +299,7 @@ BOOST_PYTHON_MODULE(_linkbot)
     .def(#func, &Linkbot::func, docstring)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
         #include"linkbot_functions.x.h"
+        .def("moveWait", &Linkbot::moveWait)
         ;
     #undef LINKBOT_FUNCTION
 }

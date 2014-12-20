@@ -103,7 +103,7 @@ class Linkbot (_linkbot.Linkbot):
                  for joints which are not movable (i.e. joint 2 on a Linkbot-I)
                  are always zero.
         '''
-        values = _linkbot.Linkbot.linkbotGetJointAngles(self)
+        values = _linkbot.Linkbot.getJointAngles(self)
         return tuple(values[1:])
 
     def getJointSpeed(self, jointNo):

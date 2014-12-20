@@ -10,7 +10,6 @@ if __name__ == "__main__":
         quit()
     serialID = sys.argv[1]
     myLinkbot = linkbot.Linkbot(serialID)
-    time.sleep(2)
     myLinkbot.connect()
 
     myLinkbot.move(90, 90, 90)
