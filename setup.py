@@ -52,6 +52,7 @@ if platform.system() == 'Windows':
         subprocess.check_call([
                 'cmake', 
                 '-G', 'MinGW Makefiles', 
+                '-DCMAKE_BUILD_TYPE=Debug',
                 projDir])
     subprocess.check_call(['mingw32-make', 'VERBOSE=1'])
     shutil.copy(os.path.join(buildDir, '_linkbot.pyd'),

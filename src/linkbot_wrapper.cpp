@@ -2,9 +2,11 @@
 #include <cmath>
 #include <thread>
 #include <mutex>
+#include <chrono>
 #include <condition_variable>
 #include "baromesh/linkbot.hpp"
 #include <boost/python.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace boost::python;
 
@@ -23,11 +25,14 @@ class Linkbot : public barobo::Linkbot
     {
         barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
         barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
-        barobo::Linkbot::setEncoderEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
         barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
         disconnect();
         if(m_jointEventCbThread.joinable())
+        {
             m_jointEventCbThread.join();
+        }
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     void releaseCallbacks()
@@ -36,6 +41,7 @@ class Linkbot : public barobo::Linkbot
         m_encoderEventCbObject = boost::python::object();
         m_jointEventCbObject = boost::python::object();
         m_accelerometerEventCbObject = boost::python::object();
+        std::cout << "Callbacks released." << std::endl;
     }
 
     void connect()
@@ -165,7 +171,7 @@ class Linkbot : public barobo::Linkbot
         }
     }
 
-    static void buttonEventCallback(int buttonNo,
+    static void buttonEventCallback(barobo::Button::Type buttonNo,
                                     barobo::ButtonState::Type event,
                                     int timestamp,
                                     void* userData)
@@ -362,6 +368,7 @@ class Linkbot : public barobo::Linkbot
 
 BOOST_PYTHON_MODULE(_linkbot)
 {
+    boost::filesystem::path::imbue(std::locale("C"));
     #define LINKBOT_FUNCTION(func, docstring) \
     .def(#func, &Linkbot::func, docstring)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
