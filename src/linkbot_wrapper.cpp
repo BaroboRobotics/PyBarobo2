@@ -41,7 +41,6 @@ class Linkbot : public barobo::Linkbot
         m_encoderEventCbObject = boost::python::object();
         m_jointEventCbObject = boost::python::object();
         m_accelerometerEventCbObject = boost::python::object();
-        std::cout << "Callbacks released." << std::endl;
     }
 
     void connect()

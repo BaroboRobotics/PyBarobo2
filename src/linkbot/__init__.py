@@ -240,6 +240,12 @@ class Linkbot (_linkbot.Linkbot):
         assert(jointNo >= 1 and jointNo <=3)
         self.moveWait(1<<(jointNo-1))
 
+    def moveWait(self, mask=0x07):
+        '''
+        Wait for all masked joints (all joints by default) to stop moving.
+        '''
+        _linkbot.Linkbot.moveWait(self, mask)
+
     def stopJoint(self, jointNo):
         '''
         Stop a single joint on the robot, immediately making the joint coast.
