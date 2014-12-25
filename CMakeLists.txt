@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 2.8.12) 
 project(pylinkbot CXX)
 
-add_subdirectory(../deps/baromesh baromesh)
+# Give subprojects access to LinkbotLabs.cmake
+list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/../cmake-modules")
+
+include(LinkbotLabs)
+ll_add_dependency(baromesh/library baromesh)
+
 ##############################################################################
 # Boost
 
@@ -27,18 +32,18 @@ add_definitions(-DBOOST_ALL_NO_LIB=1 -DBOOST_PYTHON_SOURCE)
 
 target_include_directories(_linkbot
     PUBLIC
-    $<TARGET_PROPERTY:baromesh,INCLUDE_DIRECTORIES>
+    #$<TARGET_PROPERTY:baromesh,INCLUDE_DIRECTORIES>
     ${PYTHON_INCLUDE_DIRS})
 
 if(WIN32)
-set_target_properties(_linkbot
-                      PROPERTIES SUFFIX ".pyd"
-                                 PREFIX "")
+    set(suffix ".pyd")
 else()
-set_target_properties(_linkbot
-                      PROPERTIES SUFFIX ".so"
-                                 PREFIX "")
+    set(suffix ".so")
 endif()
+
+set_target_properties(_linkbot
+                      PROPERTIES SUFFIX ${suffix}
+                                 PREFIX "")
 
 target_link_libraries(_linkbot sfp cxx-util robot-interface
     dongle-interface baromesh rpc ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
