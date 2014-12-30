@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""
+.. module::linkbot
+    :synopsis: A module for controlling Barobo Linkbots.
+
+.. moduleauthor:: David Ko <david@barobo.com>
+"""
+
 from linkbot import _linkbot 
 
 import time
@@ -54,6 +61,14 @@ class Linkbot (_linkbot.Linkbot):
             self._lock.wait(timeout)
 
     def __init__(self, serialId = 'LOCL'):
+        """Create a new Linkbot object
+
+        :param serialId: A robot's Serial ID.  If ommitted, will
+              attempt to connect to a Linkbot connected locally via USB. The
+              serial ID may be specified here, in the connect() function, or not
+              at all.
+        :type serialId: str
+        """
         _linkbot.Linkbot.__init__(self, serialId)
         self.__serialId = serialId
         self._jointStates = Linkbot.JointStates()
@@ -66,9 +81,13 @@ class Linkbot (_linkbot.Linkbot):
 # Connection
 
     def connect(self, serialId = None):
-        '''
-        Connect to the robot.
-        '''
+        """ Connect to the robot.
+
+        :type serialId: str
+        :param serialId: (optional): The serial ID may be specified here or in
+              the Linkbot constructor. If specified in both locations, the one
+              specified here will override the one specified in the constructor.
+        """ 
         _linkbot.Linkbot.connect(self)
         self._formFactor = self.getFormFactor()
         if self._formFactor == Linkbot.FormFactor.I:
@@ -86,6 +105,15 @@ class Linkbot (_linkbot.Linkbot):
     def getJointAngle(self, jointNo):
         '''
         Get the current angle for a particular joint
+
+        
+        :type jointNo: int 
+        :param jointNo: The joint number of robot.
+
+        Example::
+
+            # Get the joint angle for joint 1
+            angle = robot.getJointAngle(1)
         '''
         assert(jointNo >= 1 and jointNo <= 3)
         return self.getJointAngles()[jointNo-1]
@@ -94,19 +122,31 @@ class Linkbot (_linkbot.Linkbot):
         '''
         Get the current joint angles of the robot.
 
+        :rtype: (number, number, number)
+           Returned values are in degrees. The three values indicate the
+           joint angles for joints 1, 2, and 3 respectively. Values
+           for joints which are not movable (i.e. joint 2 on a Linkbot-I)
+           are always zero.
+
         Example::
+
             j1, j2, j3 = robot.getJointAngles()
 
-        @rtype: (number, number, number)
-        @return: Returned values are in degrees. The three values indicate the
-                 joint angles for joints 1, 2, and 3 respectively. Values
-                 for joints which are not movable (i.e. joint 2 on a Linkbot-I)
-                 are always zero.
         '''
         values = _linkbot.Linkbot.getJointAngles(self)
         return tuple(values[1:])
 
     def getJointSpeed(self, jointNo):
+        """Get the current speed for a joint
+
+        :param jointNo: A joint number.
+        :type jointNo: int
+        :rtype: float (degrees/second)
+
+        Example::
+            # Get the joint speed for joint 1
+            speed = robot.getJointSpeed(1)
+        """
         return self.getJointSpeeds()[jointNo-1]
    
 # Setters
@@ -115,7 +155,8 @@ class Linkbot (_linkbot.Linkbot):
         Set the Linkbot's buzzer frequency. Setting the frequency to zero turns
         off the buzzer.
 
-        @param freq: The frequency to set the buzzer, in Hertz.
+        :type freq: int
+        :param freq: The frequency to set the buzzer, in Hertz.
         '''
         _linkbot.Linkbot.setBuzzerFrequencyOn(self, float(freq))
 
@@ -123,65 +164,153 @@ class Linkbot (_linkbot.Linkbot):
         '''
         Set the speed for a single joint on the robot.
 
-        @param jointNo: The joint to set the speed. Should be 1, 2, or 3.
-        @param speed: The requested speed of the joint, in degrees/second.
+        :type jointNo: int
+        :param JointNo: The joint to set the speed. Should be 1, 2, or 3.
+        :type speed: float
+        :param speed: The new speed of the joint, in degrees/second.
+
+        Example::
+            # Set the joint speed for joint 3 to 100 degrees per second
+            robot.setJointSpeed(3, 100)
         '''
         self.setJointSpeeds(speed, speed, speed, mask=(1<<(jointNo-1)) )
 
     def setJointSpeeds(self, s1, s2, s3, mask=0x07):
+        """Set the joint speeds for all of the joints on a robot.
+
+        :type s1: float
+        :param s1: The speed, in degrees/sec, to set the first joint. Parameters
+            s2 and s3 are similar for joints 2 and 3.
+        :type mask: int 
+        :param mask: (optional) A bitmask to specify which joints to modify the
+           speed. The speed on the robot's joint is only changed if
+           (mask&(1<<(jointNo-1))).
+        """
         _linkbot.Linkbot.setJointSpeeds(self, mask, s1, s2, s3)
     
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
+        """Move a robot's motors using the on-board PID controller. 
+
+        This is the fastest way to get a Linkbot's motor to a particular angle
+        position. The "speed" setting of the joint is ignored during this
+        motion.
+
+        :type j1: float
+        :param j1: Relative angle in degrees to move the joint. If a joint is
+              currently at a position of 30 degrees and a 90 degree drive is
+              issued, the final position of the joint will be at 120 degrees.
+              Parameters j2 and j3 are similar for joints 2 and 3.
+        :type mask: int
+        :param mask: (optional) A bitmask to specify which joints to move. 
+              The robot will only move joints where (mask&(1<<(jointNo-1))) is
+              true.
+        """
+          
         self.driveNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
     def driveNB(self, j1, j2, j3, mask=0x07):
+        """Non blocking version of :func:`Linkbot.drive`."""
         _linkbot.Linkbot.drive(self, mask, j1, j2, j3)
 
     def driveJoint(self, jointNo, angle):
+        """Move a single motor using the on-board PID controller.
+
+        This is the fastest way to drive a single joint to a desired position.
+        The "speed" setting of the joint is ignored during the motion. See also:
+        :func:`Linkbot.drive`
+
+        :type jointNo: int
+        :param jointNo: The joint to move.
+        :type angle: float
+        :param angle: A relative angle in degrees to move the joint.
+        """
         self.driveJointNB(jointNo, angle)
         self.moveWait(1<<(jointNo-1))
 
     def driveJointNB(self, jointNo, angle):
+        """Non-blocking version of :func:`Linkbot.driveJoint`"""
         self.driveNB(angle, angle, angle, 1<<(jointNo-1))
 
     def driveJointTo(self, jointNo, angle):
+        """Move a single motor using the on-board PID controller.
+
+        This is the fastest way to drive a single joint to a desired position.
+        The "speed" setting of the joint is ignored during the motion. See also:
+        :func:`Linkbot.drive`
+
+        :type jointNo: int
+        :param jointNo: The joint to move.
+        :type angle: float
+        :param angle: An absolute angle in degrees to move the joint. 
+
+        Example::
+            robot.driveJointTo(1, 20)
+            # Joint 1 is now at the 20 degree position.
+            # The next line of code will move joint 1 10 degrees in the negative
+            # direction.
+            robot.driveJointTo(1, 10)
+        """
         self.driveJointToNB(jointNo, angle)
         self.moveWait(1<<(jointNo))
 
     def driveJointToNB(self, jointNo, angle):
+        """Non-blocking version of :func:`Linkbot.driveJointTo`"""
         self.driveToNB(angle, angle, angle, 1<<(jointNo-1))
 
     def driveTo(self, j1, j2, j3, mask=0x07):
+        """Move a robot's motors using the on-board PID controller. 
+
+        This is the fastest way to get a Linkbot's motor to a particular angle
+        position. The "speed" setting of the joint is ignored during this
+        motion.
+
+        :type j1: float
+        :param j1: Absolute angle in degrees to move the joint. If a joint is
+              currently at a position of 30 degrees and a 90 degree drive is
+              issued, the joint will move in the positive direction by 60 
+              degrees.
+              Parameters j2 and j3 are similar for joints 2 and 3.
+        :type mask: int
+        :param mask: (optional) A bitmask to specify which joints to move. 
+              The robot will only move joints where (mask&(1<<(jointNo-1))) is
+              true.
+        """
         self.driveToNB(j1, j2, j3, mask)
         self.moveWait(mask)
         
     def driveToNB(self, j1, j2, j3, mask=0x07):
+        """Non-blocking version of :func:`Linkbot.driveTo`"""
         _linkbot.Linkbot.driveTo(self, mask, j1, j2, j3)
     
     def move(self, j1, j2, j3, mask=0x07):
-        '''
-        Move the joints on a robot and wait until all movements are finished.
+        '''Move the joints on a robot and wait until all movements are finished.
 
-        robot.move(90, 0, -90) # Drives Linkbot-I forward by turning wheels
-                               # 90 degrees
+        Move a robot's joints at the constant velocity previously set by a call
+        to :func:`Linkbot.setJointSpeed` or similar functions.
+
+        :type j1: float
+        :param j1: An angle in degrees. The joint moves this amount from
+            wherever the joints are currently positioned.
+
+        Example::
+            robot.move(90, 0, -90) # Drives Linkbot-I forward by turning wheels
+                                   # 90 degrees
         '''
         self.moveNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
     def moveNB(self, j1, j2, j3, mask=0x07):
-        '''
-        Move the joints on a robot and wait until all movements are finished.
+        '''Non-blocking version of :func:`Linkbot.move`
 
-        This function returns as soon as the joints begin moving.
-
-        # The following code makes a Linkbot-I change its LED color to red and
-        # then blue while it is rolling forward.
-        robot.moveNB(90, 0, -90)
-        robot.setLedColor(255, 0, 0)
-        time.sleep(0.5)
-        robot.setLEDColor(0, 0, 255)
+        Example::
+            # The following code makes a Linkbot-I change its LED color to red 
+            # and then blue while it is rolling forward.
+            robot.moveNB(90, 0, -90)
+            robot.setLedColor(255, 0, 0)
+            time.sleep(0.5)
+            robot.setLEDColor(0, 0, 255)
 
         '''
         _linkbot.Linkbot.move(self, mask, j1, j2, j3)
@@ -191,21 +320,31 @@ class Linkbot (_linkbot.Linkbot):
         This function makes the joints on a robot begin moving continuously,
         "forever". 
 
-        @param dir1, dir2, dir3: These parameters should be members of the
-            Linkbot.JointStates class. They should be one of:
-                - Linkbot.JointStates.STOP : Stop and relax the joint wherever
-                  it is.
-                - Linkbot.JointStates.HOLD : Stop and make the joint stay at its
-                  current position.
-                - Linkbot.JointStates.MOVING : Begin moving the joint at
-                  whatever speed the joint was last set to with the
-                  setJointSpeeds() function.
+        :type dir1: :class:`Linkbot.JointStates`
+        :param dir1: These parameters should be members of the
+            Linkbot.JointStates class. They should be one of
+
+            - Linkbot.JointStates.STOP : Stop and relax the joint wherever
+              it is.
+            - Linkbot.JointStates.HOLD : Stop and make the joint stay at its
+              current position.
+            - Linkbot.JointStates.MOVING : Begin moving the joint at
+              whatever speed the joint was last set to with the
+              setJointSpeeds() function.
         '''
         _linkbot.Linkbot.moveContinuous(self, mask, dir1, dir2, dir3)
 
     def moveJoint(self, jointNo, angle):
-        '''
-        Move a single joint and wait for the motion to finish.
+        """Move a single motor using the on-board constant velocity controller.
+
+        Move a single joint at the velocity last set by
+        :func:`Linkbot.setJointSpeed` or other speed setting functions.
+        See also: :func:`Linkbot.move`
+
+        :type jointNo: int
+        :param jointNo: The joint to move.
+        :type angle: float
+        :param angle: A relative angle in degrees to move the joint.
 
         Example::
 
@@ -213,36 +352,33 @@ class Linkbot (_linkbot.Linkbot):
             # 3 90 degrees after joint 1 has stopped moving.
             robot.moveJoint(1, 90)
             robot.moveJoint(3, 90)
-        '''
+        """
         assert (jointNo >= 1 and jointNo <= 3)
         self.moveJointNB(jointNo, angle)
         self.moveWait(1<<(jointNo-1))
 
     def moveJointNB(self, jointNo, angle):
-        '''
-        Move a single joint. Returns after the joint begins moving.
-
-        Example::
-
-            # The following code moves joint 1 90 degrees and moves joint 3 90
-            # degrees simultaneously.
-            robot.moveJointNB(1, 90)
-            robot.moveJointNB(3, 90)
+        '''Non-blocking version of :func:`Linkbot.moveJoint`
         '''
         assert (jointNo >= 1 and jointNo <= 3)
         mask = 1<<(jointNo-1)
         self.moveNB(angle, angle, angle, mask)
 
     def moveJointWait(self, jointNo):
-        '''
-        Wait for a single joint to stop moving.
+        ''' Wait for a single joint to stop moving.
+
+        This function blocks until the joint specified by the parameter
+        ``jointNo`` stops moving.
+
+        :type jointNo: int
+        :param jointNo: The joint to wait for.
+
         '''
         assert(jointNo >= 1 and jointNo <=3)
         self.moveWait(1<<(jointNo-1))
 
     def moveWait(self, mask=0x07):
-        '''
-        Wait for all masked joints (all joints by default) to stop moving.
+        ''' Wait for all masked joints (all joints by default) to stop moving.
         '''
         _linkbot.Linkbot.moveWait(self, mask)
 
@@ -253,6 +389,7 @@ class Linkbot (_linkbot.Linkbot):
         self.stop(1<<(jointNo-1))
 
     def stop(self, mask=0x07):
+        '''Immediately stop and relax all joints on the Linkbot.'''
         _linkbot.Linkbot.stop(self, mask)
 
     # CALLBACKS
@@ -292,37 +429,43 @@ class Linkbot (_linkbot.Linkbot):
         parameter, or the member function "accelerometerEventCB()" may be
         overridden.
 
-        @param cb: (optional) A callback function that will be called when
-        accelerometer events are received. The callback function prototype
-        should be cb(x, y, z, timestamp)
+        :type cb: function(x, y, z, timestamp)
+        :param cb: (optional) A callback function that will be called when
+            accelerometer events are received. The callback function prototype
+            should be cb(x, y, z, timestamp)
         '''
         self.__accelCb = cb
         self.setAccelerometerEventCallback(self.accelerometerEventCB)
 
     def enableEncoderEvents(self, granularity=20.0, cb=None):
-        '''
+        '''Make the robot begin reporting encoder events.
+
         Make the robot begin reporting joint encoder events. To handle these
         events, a callback function may be specified by the "cb" parameter, or
         the member function "encoderEventCB()" may be overridden.
 
-        @param granularity: (optional) The granularity of the reported encoder
-        events, in degrees. For example, setting the granularity to "10.0" means
-        the robot will report an encoder event for every 10 degrees that a joint
-        is rotated.
-        @param cb: (optional) The callback function to handle the event. The
-        function prototype should be cb(jointNo, angle, timestamp)
+        :type granularity: float
+        :param granularity: (optional) The granularity of the reported encoder
+            events, in degrees. For example, setting the granularity to "10.0" means
+            the robot will report an encoder event for every 10 degrees that a joint
+            is rotated.
+        :type cb: function(jointNo, angle, timestamp)
+        :param cb: (optional) The callback function to handle the event. The
+            function prototype should be cb(jointNo, angle, timestamp)
         '''
         self.__encoderCb = cb
         self.setEncoderEventCallback(self.encoderEventCB, granularity)
 
     def enableButtonEvents(self, cb=None):
-        '''
+        ''' Make the robot begin button events.
+
         Make the robot begin reporting button events. To handle the events, a
         callback function may be specified by the "cb" parameter, or the member
         function "buttonEventCB()" may be overridden.
-
-        @param cb: (optional) A callback function with the prototype
-        cb(ButtonNo, buttonState, timestamp)
+        
+        :type cb: function(buttonNo, buttonState, timestamp)
+        :param cb: (optional) A callback function with the prototype
+            cb(ButtonNo, buttonState, timestamp)
         '''
         self.__buttonCb = cb
         self.setButtonEventCallback(self.buttonEventCB)
