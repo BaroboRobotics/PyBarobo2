@@ -52,7 +52,7 @@ if platform.system() == 'Windows':
         subprocess.check_call([
                 'cmake', 
                 '-G', 'MinGW Makefiles', 
-                '-DCMAKE_BUILD_TYPE=Debug',
+                '-DCMAKE_BUILD_TYPE=Release',
                 projDir])
     subprocess.check_call(['mingw32-make', 'VERBOSE=1'])
     shutil.copy(os.path.join(buildDir, '_linkbot.pyd'),
@@ -70,7 +70,7 @@ else:
                 '-G', 'Unix Makefiles', 
                 '-DCMAKE_CXX_FLAGS=-fPIC', 
                 '-DBUILD_SHARED_LIBS=OFF',
-                '-DCMAKE_BUILD_TYPE=Debug',
+                '-DCMAKE_BUILD_TYPE=Release',
                 projDir])
     subprocess.check_call(['make', 'VERBOSE=1'])
     shutil.copy(os.path.join(buildDir, '_linkbot.so'),
