@@ -85,10 +85,9 @@ if os.environ['BOOST_ROOT'] is None:
     sys.exit(0)
 
 try:
-    setup(name='Linkbot',
-        platforms='blah',
+    setup(name='PyLinkbot',
         version='2.0.0',
-        description='Barobo Linkbot module',
+        description='Barobo Linkbot package',
         author='David Ko',
         author_email='david@barobo.com',
         url='http://www.barobo.com',
