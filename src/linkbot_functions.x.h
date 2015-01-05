@@ -1,6 +1,6 @@
 // CONNECTION 
-LINKBOT_FUNCTION(connect, "Connect to the Linkbot." )
-LINKBOT_FUNCTION(disconnect, "Disconnect from the Linkbot." )
+//LINKBOT_FUNCTION(connect, "Connect to the Linkbot." )
+//LINKBOT_FUNCTION(disconnect, "Disconnect from the Linkbot." )
 
 // MOVEMENT
 LINKBOT_FUNCTION(drive, 

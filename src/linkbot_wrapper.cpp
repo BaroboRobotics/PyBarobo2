@@ -19,34 +19,6 @@ class Linkbot : public barobo::Linkbot
         if (! PyEval_ThreadsInitialized()) {
             PyEval_InitThreads();
         }
-    }
-
-    ~Linkbot()
-    {
-        barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
-        barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
-        barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
-        barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
-        disconnect();
-        if(m_jointEventCbThread.joinable())
-        {
-            m_jointEventCbThread.join();
-        }
-        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-
-    void releaseCallbacks()
-    {
-        m_buttonEventCbObject = boost::python::object();
-        m_encoderEventCbObject = boost::python::object();
-        m_jointEventCbObject = boost::python::object();
-        m_accelerometerEventCbObject = boost::python::object();
-    }
-
-    void connect()
-    {
-        barobo::Linkbot::connect();
-
         /* Set up the joint event callback for moveWait() */
         barobo::Linkbot::setJointEventCallback(
                 &Linkbot::jointEventCallback,
@@ -65,6 +37,27 @@ class Linkbot : public barobo::Linkbot
                 m_motorMask = 0x07;
                 break;
         }
+    }
+
+    ~Linkbot()
+    {
+        barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
+        barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
+        if(m_jointEventCbThread.joinable())
+        {
+            m_jointEventCbThread.join();
+        }
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+
+    void releaseCallbacks()
+    {
+        m_buttonEventCbObject = boost::python::object();
+        m_encoderEventCbObject = boost::python::object();
+        m_jointEventCbObject = boost::python::object();
+        m_accelerometerEventCbObject = boost::python::object();
     }
 
 /* GETTERS */
@@ -262,10 +255,15 @@ class Linkbot : public barobo::Linkbot
     {
         auto l = static_cast<Linkbot*>(userData);
 
-        std::unique_lock<std::mutex> lock(l->m_jointStatesLock);
-        l->m_jointStates[jointNo] = event;
-        l->m_jointStatesCv.notify_all();
-        lock.unlock();
+        std::thread jointEvent (
+            [l, jointNo, event] 
+            {
+                std::unique_lock<std::mutex> lock(l->m_jointStatesLock);
+                l->m_jointStates[jointNo] = event;
+                l->m_jointStatesCv.notify_all();
+                lock.unlock();
+            });
+        jointEvent.detach();
     
         if(!l->m_jointEventCbObject.is_none()) {
             if(l->m_jointEventCbThread.joinable())
