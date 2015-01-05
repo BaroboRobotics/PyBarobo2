@@ -14,7 +14,7 @@ ll_add_dependency(baromesh/library baromesh)
 # projects we'll want to use shared libraries and defined -DBOOST_ALL_DYN_LINK
 # or the like.
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.54.0 REQUIRED COMPONENTS system log filesystem thread python)
+find_package(Boost 1.54.0 REQUIRED COMPONENTS system log filesystem thread python3)
 find_package(Threads)
 find_package(PythonLibs 3)
 

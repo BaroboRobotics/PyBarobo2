@@ -69,6 +69,7 @@ class Linkbot (_linkbot.Linkbot):
               at all.
         :type serialId: str
         """
+        serialId = serialId.upper()
         _linkbot.Linkbot.__init__(self, serialId)
         self.__serialId = serialId
         self._jointStates = Linkbot.JointStates()
@@ -88,6 +89,8 @@ class Linkbot (_linkbot.Linkbot):
               the Linkbot constructor. If specified in both locations, the one
               specified here will override the one specified in the constructor.
         """ 
+        if serialId is not None:
+            serialId = serialId.upper()
         _linkbot.Linkbot.connect(self)
         self._formFactor = self.getFormFactor()
         if self._formFactor == Linkbot.FormFactor.I:
@@ -150,6 +153,17 @@ class Linkbot (_linkbot.Linkbot):
         return self.getJointSpeeds()[jointNo-1]
    
 # Setters
+    def reset(self):
+        _linkbot.Linkbot.resetEncoderRevs(self)
+
+    def resetToZero(self):
+        _linkbot.Linkbot.resetEncoderRevs(self)
+        self.moveTo(0, 0, 0)
+
+    def resetToZeroNB(self):
+        _linkbot.Linkbot.resetEncoderRevs(self)
+        self.moveToNB(0, 0, 0)
+
     def setBuzzerFrequency(self, freq):
         '''
         Set the Linkbot's buzzer frequency. Setting the frequency to zero turns
@@ -376,6 +390,13 @@ class Linkbot (_linkbot.Linkbot):
         '''
         assert(jointNo >= 1 and jointNo <=3)
         self.moveWait(1<<(jointNo-1))
+
+    def moveTo(self, j1, j2, j3, mask=0x07):
+        self.moveToNB(j1, j2, j3, mask)
+        self.moveWait(mask)
+
+    def moveToNB(self, j1, j2, j3, mask=0x07):
+        _linkbot.Linkbot.moveTo(self, mask, j1, j2, j3)
 
     def moveWait(self, mask=0x07):
         ''' Wait for all masked joints (all joints by default) to stop moving.

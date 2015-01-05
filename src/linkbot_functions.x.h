@@ -25,6 +25,7 @@ LINKBOT_FUNCTION(getLedColor, "stub")
 LINKBOT_FUNCTION(getVersions, "stub")
 
 // SETTERS
+LINKBOT_FUNCTION(resetEncoderRevs, "stub")
 LINKBOT_FUNCTION(setLedColor, "stub")
 LINKBOT_FUNCTION(setJointSpeeds, "stub")
 LINKBOT_FUNCTION(setJointStates, "stub")
