@@ -10,6 +10,8 @@ from setuptools import setup, Extension
 import platform
 import sys
 
+PyLinkbot_Version = '2.0.1'
+
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
 # projDir = os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh')
@@ -86,7 +88,7 @@ if os.environ['BOOST_ROOT'] is None:
 
 try:
     setup(name='PyLinkbot',
-        version='2.0.0',
+        version=PyLinkbot_Version,
         description='Barobo Linkbot package',
         author='David Ko',
         author_email='david@barobo.com',
