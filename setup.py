@@ -87,20 +87,27 @@ if os.environ['BOOST_ROOT'] is None:
     sys.exit(0)
 
 try:
+    import codecs
+    here = os.path.abspath(os.path.dirname(__file__))
+    README = codecs.open(os.path.join(here, 'README.txt'), encoding='utf8').read()
+    CHANGES = codecs.open(os.path.join(here, 'CHANGES.txt'), encoding='utf8').read()
     setup(name='PyLinkbot',
         version=PyLinkbot_Version,
         description='Barobo Linkbot package',
+        long_description=README + '\n\n' +  CHANGES,
         author='David Ko',
         author_email='david@barobo.com',
         url='http://www.barobo.com',
         packages=['linkbot.demo', 'linkbot'],
         ext_package='linkbot',
+        download_url='http://wiki.linkbotlabs.com/wiki/Learning_Python_3_with_the_Linkbot/Downloads',
         #data_files = data_files,
         package_data = package_data,
         package_dir={'':stageDir},
         #py_modules=['linkbot._linkbot'],
         zip_safe = False,
-        ext_modules=[Extension('__stub', sources=['src/stub.cpp'])]
+        ext_modules=[Extension('__stub', sources=['src/stub.cpp'])],
+        license='GPL'
         )
 except Exception as e:
     print(e)
