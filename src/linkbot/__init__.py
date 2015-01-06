@@ -79,19 +79,6 @@ class Linkbot (_linkbot.Linkbot):
         self.__buttonCb = None
         atexit.register(self._releaseCallbacks)
 
-# Connection
-
-    def connect(self, serialId = None):
-        """ Connect to the robot.
-
-        :type serialId: str
-        :param serialId: (optional): The serial ID may be specified here or in
-              the Linkbot constructor. If specified in both locations, the one
-              specified here will override the one specified in the constructor.
-        """ 
-        if serialId is not None:
-            serialId = serialId.upper()
-        _linkbot.Linkbot.connect(self)
         self._formFactor = self.getFormFactor()
         if self._formFactor == Linkbot.FormFactor.I:
             self._motorMask = 0x05
@@ -102,6 +89,22 @@ class Linkbot (_linkbot.Linkbot):
         else:
             self._motorMask = 0x01
 
+
+# Connection
+
+    def connect(self, serialId = None):
+        """ Connect to the robot. (DEPRECATED)
+
+        This function is no longer required to form a connection with a Linkbot.
+        All connection now happens in __init__(). Calling this function does
+        nothing, but it is kept here for backwards-compatability purposes.
+        
+        :type serialId: str
+        :param serialId: (optional): The serial ID may be specified here or in
+              the Linkbot constructor. If specified in both locations, the one
+              specified here will override the one specified in the constructor.
+        """ 
+        pass
 
 # Getters
 
