@@ -107,6 +107,17 @@ class Linkbot (_linkbot.Linkbot):
         pass
 
 # Getters
+    def getAccelerometer(self):
+        '''Get the current accelerometer values for 3 primary axes
+
+        :rtype: (number, number, number)
+          Returned values are expressed in "G's", where one G is equivalent
+          to one earth-gravity, or 9.81 m/s/s.
+        '''
+        return _linkbot.Linkbot.getAccelerometer(self)[1:]
+
+    def getAccelerometerData(self):
+        return self.getAccelerometer()
 
     def getJointAngle(self, jointNo):
         '''

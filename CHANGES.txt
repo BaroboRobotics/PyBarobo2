@@ -1,0 +1,14 @@
+2.0.2
+=====
+- Fixed getAccelerometer() member function.
+
+2.0.1
+=====
+- Made serial ID case insensitive.
+- Fixed race condition/deadlock when waiting for joints to finish moving.
+
+2.0.0
+=====
+- Refactored back-end from PyBarobo (v1.0.0 series) to work with the new
+  LinkbotLabs and baromesh protocol.
+
