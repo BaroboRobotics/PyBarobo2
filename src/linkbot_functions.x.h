@@ -29,7 +29,7 @@ LINKBOT_FUNCTION(resetEncoderRevs, "stub")
 LINKBOT_FUNCTION(setLedColor, "stub")
 LINKBOT_FUNCTION(setJointSpeeds, "stub")
 LINKBOT_FUNCTION(setJointStates, "stub")
-LINKBOT_FUNCTION(setBuzzerFrequencyOn, "stub")
+LINKBOT_FUNCTION(setBuzzerFrequency, "stub")
 
 // CALLBACKS
 LINKBOT_FUNCTION(setAccelerometerEventCallback, "stub")

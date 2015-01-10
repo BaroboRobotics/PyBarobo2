@@ -186,7 +186,7 @@ class Linkbot (_linkbot.Linkbot):
         :type freq: int
         :param freq: The frequency to set the buzzer, in Hertz.
         '''
-        _linkbot.Linkbot.setBuzzerFrequencyOn(self, float(freq))
+        _linkbot.Linkbot.setBuzzerFrequency(self, float(freq))
 
     def setJointSpeed(self, jointNo, speed):
         '''
