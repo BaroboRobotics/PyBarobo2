@@ -41,10 +41,18 @@ class Linkbot : public barobo::Linkbot
 
     ~Linkbot()
     {
-        barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
-        barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
-        barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
-        barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
+        if(!m_accelerometerEventCbObject.is_none()) {
+            barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
+        }
+        if(!m_buttonEventCbObject.is_none()) {
+            barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
+        }
+        if(!m_encoderEventCbObject.is_none()) {
+            barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
+        }
+        if(!m_jointEventCbObject.is_none()) {
+            barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
+        }
         if(m_jointEventCbThread.joinable())
         {
             m_jointEventCbThread.join();
