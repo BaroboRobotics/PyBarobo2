@@ -10,7 +10,7 @@ from setuptools import setup, Extension
 import platform
 import sys
 
-PyLinkbot_Version = '2.0.3'
+PyLinkbot_Version = '2.0.4'
 
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
