@@ -10,13 +10,19 @@ from setuptools import setup, Extension
 import platform
 import sys
 
-PyLinkbot_Version = '2.0.2'
+PyLinkbot_Version = '2.0.5'
 
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
 # projDir = os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh')
 buildDir = os.path.join(projDir, 'build-ext-'+ platform.platform())
 stageDir = os.path.join(projDir, 'stage-'+ platform.platform())
+
+try:
+    buildDir += os.environ['CXX']
+    stageDir += os.environ['CXX']
+except:
+    pass
 
 try:
     if not os.path.isdir(buildDir):
