@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(pylinkbot CXX)
 
 # Give subprojects access to LinkbotLabs.cmake
-list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/../cmake-modules")
+list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/LinkbotLabs/cmake-modules")
 
 include(LinkbotLabs)
 ll_add_dependency(baromesh/library baromesh)
