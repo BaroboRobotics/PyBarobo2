@@ -215,7 +215,21 @@ class Linkbot (_linkbot.Linkbot):
            (mask&(1<<(jointNo-1))).
         """
         _linkbot.Linkbot.setJointSpeeds(self, mask, s1, s2, s3)
-    
+   
+    def setMotorPower(self, jointNo, power):
+        """Apply a direct power setting to a motor
+        
+        :type jointNo: int (1,3)
+        :param jointNo: The joint to apply the power to
+        :type power: int (-255,255)
+        :param power: The power to apply to the motor. 0 indicates no power
+        (full stop), negative number apply power to turn the motor in the
+        negative direction.
+        """
+        assert (jointNo >= 1 and jointNo <= 3)
+        mask = 1<<(jointNo-1)
+        _linkbot.Linkbot.motorPower(self, mask, power, power, power)
+
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
         """Move a robot's motors using the on-board PID controller. 
@@ -391,6 +405,39 @@ class Linkbot (_linkbot.Linkbot):
         assert (jointNo >= 1 and jointNo <= 3)
         mask = 1<<(jointNo-1)
         self.moveNB(angle, angle, angle, mask)
+
+    def moveJointTo(self, jointNo, angle):
+        """Move a single motor using the on-board constant velocity controller.
+
+        Move a single joint at the velocity last set by
+        :func:`Linkbot.setJointSpeed` or other speed setting functions. The 
+        'angle' parameter is the absolute position you want the motor to move
+        to.
+        See also: :func:`Linkbot.move`
+
+        :type jointNo: int
+        :param jointNo: The joint to move.
+        :type angle: float
+        :param angle: A relative angle in degrees to move the joint.
+
+        Example::
+
+            # The following code moves joint 1 to the 90 degree position, and 
+            # then moves joint3 to the 90 degree position after joint 1 has 
+            # stopped moving.
+            robot.moveJointTo(1, 90)
+            robot.moveJointTo(3, 90)
+        """
+        assert (jointNo >= 1 and jointNo <= 3)
+        self.moveJointToNB(jointNo, angle)
+        self.moveWait(1<<(jointNo-1))
+
+    def moveJointToNB(self, jointNo, angle):
+        '''Non-blocking version of :func:`Linkbot.moveJointTo`
+        '''
+        assert (jointNo >= 1 and jointNo <= 3)
+        mask = 1<<(jointNo-1)
+        self.moveToNB(angle, angle, angle, mask)
 
     def moveJointWait(self, jointNo):
         ''' Wait for a single joint to stop moving.
