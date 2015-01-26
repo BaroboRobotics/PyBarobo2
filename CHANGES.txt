@@ -1,3 +1,7 @@
+2.1.0
+=====
+- Added functions setMotorPower() and moveJointTo()
+
 2.0.4
 =====
 - Python module no longer disables robot broadcasts on disconnect unless they
