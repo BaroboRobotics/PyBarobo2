@@ -353,6 +353,22 @@ class Linkbot : public barobo::Linkbot
         PyGILState_Release(gstate);
     }
 
+    /* MISC */
+
+    void writeEeprom(int addr, boost::python::object buffer) {
+        PyObject* py_buffer = buffer.ptr();
+        /* FIXME: The next line should raise an exception in Python */
+        if(!PyObject_CheckBuffer(py_buffer)) return;
+        Py_buffer view;
+        if(PyObject_GetBuffer(py_buffer, &view, 0)) {
+            return;
+        }
+        barobo::Linkbot::writeEeprom( addr, 
+                     static_cast<const uint8_t*>(view.buf), 
+                     static_cast<size_t>(view.len));
+        PyBuffer_Release(&view);
+    }
+
     private:
         int m_motorMask;
         boost::python::object m_buttonEventCbObject;
