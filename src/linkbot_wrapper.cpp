@@ -14,7 +14,8 @@ class Linkbot : public barobo::Linkbot
 {
     public:
     Linkbot(const std::string& serialId) 
-        : barobo::Linkbot(serialId) 
+        : barobo::Linkbot(serialId),
+          m_jointStatesDirty(false)
     {
         if (! PyEval_ThreadsInitialized()) {
             PyEval_InitThreads();
@@ -132,22 +133,35 @@ class Linkbot : public barobo::Linkbot
                        m_jointStates[1],
                        m_jointStates[2]);
         Py_BEGIN_ALLOW_THREADS
-        m_jointStatesCv.wait(lock, 
-            [this, mask] {
-                bool moving = false;
-                int jointmask = 1;
-                for(auto& s : m_jointStates) {
-                    if(mask&jointmask&m_motorMask) {
-                        if(s == barobo::JointState::MOVING) {
-                            moving = true;
-                            break;
+        bool waitrc = false;
+        while(!waitrc) {
+            waitrc = m_jointStatesCv.wait_for(lock, 
+                    std::chrono::milliseconds(2000),
+                    [this, mask] {
+                        int timestamp;
+                        if(!m_jointStatesDirty) {
+                            /* We timed out. Get the current joint states */
+                            barobo::Linkbot::getJointStates(timestamp, 
+                                m_jointStates[0],
+                                m_jointStates[1],
+                                m_jointStates[2]);
                         }
+                        bool moving = false;
+                        int jointmask = 1;
+                        for(auto& s : m_jointStates) {
+                            if(mask&jointmask&m_motorMask) {
+                                if(s == barobo::JointState::MOVING) {
+                                    moving = true;
+                                    break;
+                                }
+                            }
+                            jointmask <<= 1;
+                        }
+                        m_jointStatesDirty = false;
+                        return !moving;
                     }
-                    jointmask <<= 1;
-                }
-                return !moving;
-            }
             );
+        }
         Py_END_ALLOW_THREADS
     }
 
@@ -268,6 +282,7 @@ class Linkbot : public barobo::Linkbot
             {
                 std::unique_lock<std::mutex> lock(l->m_jointStatesLock);
                 l->m_jointStates[jointNo] = event;
+                l->m_jointStatesDirty = true;
                 l->m_jointStatesCv.notify_all();
                 lock.unlock();
             });
@@ -353,6 +368,22 @@ class Linkbot : public barobo::Linkbot
         PyGILState_Release(gstate);
     }
 
+    /* MISC */
+
+    void writeEeprom(int addr, boost::python::object buffer) {
+        PyObject* py_buffer = buffer.ptr();
+        /* FIXME: The next line should raise an exception in Python */
+        if(!PyObject_CheckBuffer(py_buffer)) return;
+        Py_buffer view;
+        if(PyObject_GetBuffer(py_buffer, &view, 0)) {
+            return;
+        }
+        barobo::Linkbot::writeEeprom( addr, 
+                     static_cast<const uint8_t*>(view.buf), 
+                     static_cast<size_t>(view.len));
+        PyBuffer_Release(&view);
+    }
+
     private:
         int m_motorMask;
         boost::python::object m_buttonEventCbObject;
@@ -365,6 +396,7 @@ class Linkbot : public barobo::Linkbot
         std::thread m_accelerometerEventCbThread;
 
         barobo::JointState::Type m_jointStates[3];
+        bool m_jointStatesDirty;
         std::mutex m_jointStatesLock;
         std::condition_variable m_jointStatesCv;
 

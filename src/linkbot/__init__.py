@@ -579,5 +579,4 @@ class Linkbot (_linkbot.Linkbot):
         print('Test CB called.')
 
     def _setSerialId(self, serialId):
-        rc = _L.linkbotWriteEeprom(self.__impl, 0x412, serialId, 4)
-        assert(rc == 0)
+        _linkbot.Linkbot.writeEeprom(self, 0x412, serialId.encode())

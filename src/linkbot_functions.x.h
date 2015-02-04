@@ -36,3 +36,6 @@ LINKBOT_FUNCTION(setAccelerometerEventCallback, "stub")
 LINKBOT_FUNCTION(setButtonEventCallback, "stub")
 LINKBOT_FUNCTION(setEncoderEventCallback, "stub")
 LINKBOT_FUNCTION(setJointEventCallback, "stub")
+
+// MISC
+LINKBOT_FUNCTION(writeEeprom, "stub")
