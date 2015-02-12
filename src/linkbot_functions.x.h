@@ -39,3 +39,7 @@ LINKBOT_FUNCTION(setJointEventCallback, "stub")
 
 // MISC
 LINKBOT_FUNCTION(writeEeprom, "stub")
+LINKBOT_FUNCTION(readEeprom, "stub")
+LINKBOT_FUNCTION(writeTwi, "stub")
+LINKBOT_FUNCTION(readTwi, "stub")
+LINKBOT_FUNCTION(writeReadTwi, "stub")

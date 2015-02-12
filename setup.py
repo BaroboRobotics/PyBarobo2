@@ -19,8 +19,8 @@ buildDir = os.path.join(projDir, 'build-ext-'+ platform.platform())
 stageDir = os.path.join(projDir, 'stage-'+ platform.platform())
 
 try:
-    buildDir += os.environ['CXX']
-    stageDir += os.environ['CXX']
+    buildDir += os.path.basename(os.environ['CXX'])
+    stageDir += os.path.basename(os.environ['CXX'])
 except:
     pass
 

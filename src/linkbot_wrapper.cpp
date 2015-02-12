@@ -384,6 +384,65 @@ class Linkbot : public barobo::Linkbot
         PyBuffer_Release(&view);
     }
 
+    boost::python::list readEeprom(int addr, int size) {
+        uint8_t buf[128];
+        barobo::Linkbot::readEeprom(addr, size, buf);
+        boost::python::list retval;
+        for(int i = 0; i < size; i++) {
+            retval.append(buf[i]);
+        }
+        return retval;
+    }
+
+    void writeTwi(int addr, boost::python::object buffer) {
+        PyObject* py_buffer = buffer.ptr();
+        /* FIXME: The next line should raise an exception in Python */
+        if(!PyObject_CheckBuffer(py_buffer)) return;
+        Py_buffer view;
+        if(PyObject_GetBuffer(py_buffer, &view, 0)) {
+            return;
+        }
+        barobo::Linkbot::writeTwi( addr, 
+                     static_cast<const uint8_t*>(view.buf), 
+                     static_cast<size_t>(view.len));
+        PyBuffer_Release(&view);
+    }
+
+    boost::python::list readTwi(int addr, int size) {
+        uint8_t buf[128];
+        barobo::Linkbot::readTwi(addr, size, buf);
+        boost::python::list retval;
+        for(int i = 0; i < size; i++) {
+            retval.append(buf[i]);
+        }
+        return retval;
+    }
+
+    boost::python::list writeReadTwi(int addr, boost::python::object sendbuf,
+        int recvsize) {
+        PyObject* py_buffer = sendbuf.ptr();
+        /* FIXME: The next line should raise an exception in Python */
+        if(!PyObject_CheckBuffer(py_buffer)) return {};
+        Py_buffer view;
+        if(PyObject_GetBuffer(py_buffer, &view, 0)) {
+            return {};
+        }
+        uint8_t buf[128];
+        std::cout<<"Sending "<<view.len<<" bytes."<<std::endl;
+        std::cout<<"Receive "<<recvsize<<" bytes."<<std::endl;
+        barobo::Linkbot::writeReadTwi( addr, 
+                     static_cast<const uint8_t*>(view.buf), 
+                     static_cast<size_t>(view.len),
+                     buf,
+                     recvsize);
+        PyBuffer_Release(&view);
+        boost::python::list retval;
+        for(int i = 0; i < recvsize; i++) {
+            retval.append(buf[i]);
+        }
+        return retval;
+    }
+
     private:
         int m_motorMask;
         boost::python::object m_buttonEventCbObject;

@@ -580,3 +580,42 @@ class Linkbot (_linkbot.Linkbot):
 
     def _setSerialId(self, serialId):
         _linkbot.Linkbot.writeEeprom(self, 0x412, serialId.encode())
+
+class ArduinoLinkbot(Linkbot):
+    TWI_ADDR = 0x03
+
+    class PinMode:
+        input = 0
+        output = 1
+        input_pullup = 2
+
+    class Command:
+        read_register = 0x00
+        write_register = 0x01
+        pin_mode = 0x02
+        digital_write = 0x03
+        digital_read = 0x04
+        analog_ref = 0x05
+        analog_read = 0x06
+        analog_write = 0x07
+
+    def analogWrite(self, pin, value):
+        buf = bytearray([self.Command.analog_write, pin, value])
+        self.writeTwi(self.TWI_ADDR, buf)
+
+    def analogRead(self, pin):
+        buf = bytearray([self.Command.analog_read, pin])
+        return self.writeReadTwi(self.TWI_ADDR, buf, 2)
+
+    def digitalWrite(self, pin, value):
+        buf = bytearray([self.Command.digital_write, pin, value])
+        self.writeTwi(self.TWI_ADDR, buf)
+    
+    def digitalRead(self, pin):
+        buf = bytearray([self.Command.digital_read, pin])
+        return self.writeReadTwi(self.TWI_ADDR, buf, 1)
+
+    def pinMode(self, pin, mode):
+        buf = bytearray([self.Command.pin_mode, pin, mode])
+        self.writeTwi(self.TWI_ADDR, buf)
+
