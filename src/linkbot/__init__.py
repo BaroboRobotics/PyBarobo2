@@ -605,7 +605,9 @@ class ArduinoLinkbot(Linkbot):
 
     def analogRead(self, pin):
         buf = bytearray([self.Command.analog_read, pin])
-        return self.writeReadTwi(self.TWI_ADDR, buf, 2)
+        data = self.writeReadTwi(self.TWI_ADDR, buf, 2)
+        value = (data[0]<<8) + data[1]
+        return value
 
     def digitalWrite(self, pin, value):
         buf = bytearray([self.Command.digital_write, pin, value])
@@ -613,7 +615,7 @@ class ArduinoLinkbot(Linkbot):
     
     def digitalRead(self, pin):
         buf = bytearray([self.Command.digital_read, pin])
-        return self.writeReadTwi(self.TWI_ADDR, buf, 1)
+        return self.writeReadTwi(self.TWI_ADDR, buf, 1)[0]
 
     def pinMode(self, pin, mode):
         buf = bytearray([self.Command.pin_mode, pin, mode])

@@ -428,8 +428,6 @@ class Linkbot : public barobo::Linkbot
             return {};
         }
         uint8_t buf[128];
-        std::cout<<"Sending "<<view.len<<" bytes."<<std::endl;
-        std::cout<<"Receive "<<recvsize<<" bytes."<<std::endl;
         barobo::Linkbot::writeReadTwi( addr, 
                      static_cast<const uint8_t*>(view.buf), 
                      static_cast<size_t>(view.len),
