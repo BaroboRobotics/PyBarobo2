@@ -23,6 +23,7 @@ LINKBOT_FUNCTION(getJointSpeeds, "stub")
 LINKBOT_FUNCTION(getJointStates, "stub")
 LINKBOT_FUNCTION(getLedColor, "stub")
 LINKBOT_FUNCTION(getVersions, "stub")
+LINKBOT_FUNCTION(getJointSafetyThresholds, "stub")
 
 // SETTERS
 LINKBOT_FUNCTION(resetEncoderRevs, "stub")
@@ -30,6 +31,7 @@ LINKBOT_FUNCTION(setLedColor, "stub")
 LINKBOT_FUNCTION(setJointSpeeds, "stub")
 LINKBOT_FUNCTION(setJointStates, "stub")
 LINKBOT_FUNCTION(setBuzzerFrequency, "stub")
+LINKBOT_FUNCTION(setJointSafetyThresholds, "stub")
 
 // CALLBACKS
 LINKBOT_FUNCTION(setAccelerometerEventCallback, "stub")

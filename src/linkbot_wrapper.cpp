@@ -10,6 +10,26 @@
 
 using namespace boost::python;
 
+struct move_exception : std::exception
+{
+    move_exception(int motor) : mMotor(motor) { }
+    char const* what() const throw() { 
+        cnvt << "Motor " << mMotor << " error encountered.";
+        return cnvt.str().c_str();
+    }
+
+    private:
+    static std::ostringstream cnvt;
+    int mMotor;
+};
+std::ostringstream move_exception::cnvt;
+
+void translate_exception(move_exception const& e)
+{
+    // Use the Python 'C' API to set up an exception object
+    PyErr_SetString(PyExc_Warning, e.what());
+}
+
 class Linkbot : public barobo::Linkbot
 {
     public:
@@ -122,6 +142,13 @@ class Linkbot : public barobo::Linkbot
         return boost::python::make_tuple(v1, v2, v3);
     }
 
+    boost::python::tuple getJointSafetyThresholds()
+    {
+        int t1, t2, t3;
+        barobo::Linkbot::getJointSafetyThresholds(t1, t2, t3);
+        return boost::python::make_tuple(t1, t2, t3);
+    }
+
 /* MOVEMENT */
 
     void moveWait(int mask=0x07)
@@ -132,12 +159,14 @@ class Linkbot : public barobo::Linkbot
                        m_jointStates[0],
                        m_jointStates[1],
                        m_jointStates[2]);
-        Py_BEGIN_ALLOW_THREADS
         bool waitrc = false;
+        int errorcode = 0;
+        int jointnum = 1;
+        Py_BEGIN_ALLOW_THREADS
         while(!waitrc) {
             waitrc = m_jointStatesCv.wait_for(lock, 
                     std::chrono::milliseconds(2000),
-                    [this, mask] {
+                    [this, mask, &errorcode, &jointnum] {
                         int timestamp;
                         if(!m_jointStatesDirty) {
                             /* We timed out. Get the current joint states */
@@ -148,13 +177,22 @@ class Linkbot : public barobo::Linkbot
                         }
                         bool moving = false;
                         int jointmask = 1;
+                        jointnum = 1;
                         for(auto& s : m_jointStates) {
                             if(mask&jointmask&m_motorMask) {
+                                switch(s) {
+                                    case barobo::JointState::MOVING:
+                                        moving = true;
+                                        break;
+                                    case barobo::JointState::ERROR:
+                                        errorcode = jointnum;
+                                        return true; // Pop out of the thread
+                                }
                                 if(s == barobo::JointState::MOVING) {
                                     moving = true;
-                                    break;
                                 }
                             }
+                            jointnum++;
                             jointmask <<= 1;
                         }
                         m_jointStatesDirty = false;
@@ -163,6 +201,9 @@ class Linkbot : public barobo::Linkbot
             );
         }
         Py_END_ALLOW_THREADS
+        if(errorcode) {
+            throw move_exception(jointnum);
+        }
     }
 
 /* CALLBACKS */
@@ -462,6 +503,7 @@ class Linkbot : public barobo::Linkbot
 
 BOOST_PYTHON_MODULE(_linkbot)
 {
+    register_exception_translator<move_exception>(&translate_exception);
     boost::filesystem::path::imbue(std::locale("C"));
     #define LINKBOT_FUNCTION(func, docstring) \
     .def(#func, &Linkbot::func, docstring)

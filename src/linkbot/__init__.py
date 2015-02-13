@@ -153,6 +153,9 @@ class Linkbot (_linkbot.Linkbot):
         values = _linkbot.Linkbot.getJointAngles(self)
         return tuple(values[1:])
 
+    def getJointSafetyThresholds(self):
+        return _linkbot.Linkbot.getJointSafetyThresholds(self)
+
     def getJointSpeed(self, jointNo):
         """Get the current speed for a joint
 
@@ -187,6 +190,9 @@ class Linkbot (_linkbot.Linkbot):
         :param freq: The frequency to set the buzzer, in Hertz.
         '''
         _linkbot.Linkbot.setBuzzerFrequency(self, float(freq))
+
+    def setJointSafetyThresholds(self, t1 = 100, t2 = 100, t3 = 100, mask=0x07):
+        _linkbot.Linkbot.setJointSafetyThresholds(self, mask, t1, t2, t3)
 
     def setJointSpeed(self, jointNo, speed):
         '''
