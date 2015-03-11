@@ -184,7 +184,7 @@ class Linkbot : public barobo::Linkbot
                                     case barobo::JointState::MOVING:
                                         moving = true;
                                         break;
-                                    case barobo::JointState::ERROR:
+                                    case barobo::JointState::FAILURE:
                                         errorcode = jointnum;
                                         return true; // Pop out of the thread
                                 }
