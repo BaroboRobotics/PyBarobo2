@@ -210,11 +210,6 @@ class Linkbot : public barobo::Linkbot
 
     void setButtonEventCallback(boost::python::object func)
     {
-        static bool initialized = false;
-        if(!initialized) {
-            initialized = true;
-            Py_DECREF(m_linkbot.ptr());
-        }
         m_buttonEventCbObject = func;
         if(func.is_none()) {
             barobo::Linkbot::setButtonEventCallback(
@@ -222,7 +217,7 @@ class Linkbot : public barobo::Linkbot
         } else {
             barobo::Linkbot::setButtonEventCallback(
                     &Linkbot::buttonEventCallback,
-                    &m_buttonEventCbObject);
+                    this);
         }
     }
 
@@ -231,12 +226,19 @@ class Linkbot : public barobo::Linkbot
                                     int timestamp,
                                     void* userData)
     {
-        std::thread cbThread( &Linkbot::buttonEventCallbackThread,
-                              buttonNo,
-                              event,
-                              timestamp,
-                              userData);
-        cbThread.detach();
+        auto l = static_cast<Linkbot*>(userData);
+        if(!l->m_buttonEventCbObject.is_none()) {
+            if(l->m_buttonEventCbThread.joinable())
+                l->m_buttonEventCbThread.join();
+            std::thread cbThread( &Linkbot::buttonEventCallbackThread,
+                    buttonNo,
+                    event,
+                    timestamp,
+                    userData);
+            l->m_buttonEventCbThread.swap(cbThread);
+            if(cbThread.joinable())
+                cbThread.join();
+        }
     }
 
     static void buttonEventCallbackThread(int buttonNo,
@@ -244,19 +246,21 @@ class Linkbot : public barobo::Linkbot
                                     int timestamp,
                                     void* userData)
     {
-        /* Lock the Python GIL */
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
-
-        /* The userData should be a python object */
-        boost::python::object* func =
-            static_cast<boost::python::object*>(userData);
-        if(!func->is_none()) {
-            (*func)(buttonNo, static_cast<int>(event), timestamp);
+        auto l = static_cast<Linkbot*>(userData);
+        auto &func = l->m_buttonEventCbObject;
+    
+        if(!func.is_none()) {
+            /* Lock the Python GIL */
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
+            try {
+                (func)(buttonNo, static_cast<int>(event), timestamp);
+            } catch (...) {
+                boost::python::handle_exception();
+            }
+            /* Release the Python GIL */
+            PyGILState_Release(gstate);
         }
-
-        /* Release the Python GIL */
-        PyGILState_Release(gstate);
     }
 
     void setEncoderEventCallback(boost::python::object func, float granularity)
