@@ -269,7 +269,7 @@ class Linkbot : public barobo::Linkbot
             barobo::Linkbot::setEncoderEventCallback(
                     &Linkbot::encoderEventCallback,
                     granularity,
-                    &m_encoderEventCbObject);
+                    this);
         }
     }
 
@@ -278,12 +278,19 @@ class Linkbot : public barobo::Linkbot
                                      int timestamp,
                                      void* userData)
     {
-        std::thread cbThread ( &Linkbot::encoderEventCallbackThread,
-                               jointNo,
-                               anglePosition,
-                               timestamp,
-                               userData );
-        cbThread.detach();
+        auto l = static_cast<Linkbot*>(userData);
+        if(!l->m_encoderEventCbObject.is_none()) {
+            if(l->m_encoderEventCbThread.joinable())
+                l->m_encoderEventCbThread.join();
+            std::thread cbThread ( &Linkbot::encoderEventCallbackThread,
+                    jointNo,
+                    anglePosition,
+                    timestamp,
+                    userData );
+            l->m_encoderEventCbThread.swap(cbThread);
+            if(cbThread.joinable())
+                cbThread.join();
+        }
     }
 
     static void encoderEventCallbackThread(int jointNo,
@@ -291,19 +298,19 @@ class Linkbot : public barobo::Linkbot
                                     int timestamp,
                                     void* userData)
     {
-        /* Lock the Python GIL */
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
+        auto l = static_cast<Linkbot*>(userData);
+        auto &func = l->m_encoderEventCbObject;
 
-        /* The userData should be a python object */
-        boost::python::object* func =
-            static_cast<boost::python::object*>(userData);
-        if(!func->is_none()) {
-            (*func)(jointNo+1, anglePosition, timestamp);
+        if(!func.is_none()) {
+            /* Lock the Python GIL */
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
+
+            (func)(jointNo+1, anglePosition, timestamp);
+
+            /* Release the Python GIL */
+            PyGILState_Release(gstate);
         }
-
-        /* Release the Python GIL */
-        PyGILState_Release(gstate);
     }
 
     void setJointEventCallback(boost::python::object func)

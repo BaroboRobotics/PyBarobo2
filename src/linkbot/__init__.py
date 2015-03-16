@@ -168,7 +168,14 @@ class Linkbot (_linkbot.Linkbot):
             speed = robot.getJointSpeed(1)
         """
         return self.getJointSpeeds()[jointNo-1]
-   
+
+    def getHwVersion(self):
+        mybytes = self.readEeprom(0x420, 3)
+        return (mybytes[0], mybytes[1], mybytes[2])
+
+    def getSerialId(self):
+        bytestream = self.readEeprom(0x412, 4)
+        return bytearray(bytestream).decode()
 # Setters
     def reset(self):
         _linkbot.Linkbot.resetEncoderRevs(self)
@@ -235,6 +242,16 @@ class Linkbot (_linkbot.Linkbot):
         assert (jointNo >= 1 and jointNo <= 3)
         mask = 1<<(jointNo-1)
         _linkbot.Linkbot.motorPower(self, mask, power, power, power)
+
+    def setMotorPowers(self, power1, power2, power3):
+        """Apply a direct power setting to all motors
+        
+        :type power: int (-255,255)
+        :param power: The power to apply to the motor. 0 indicates no power
+        (full stop), negative number apply power to turn the motor in the
+        negative direction.
+        """
+        _linkbot.Linkbot.motorPower(self, 0x07, power1, power2, power3)
 
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
@@ -480,6 +497,30 @@ class Linkbot (_linkbot.Linkbot):
         '''Immediately stop and relax all joints on the Linkbot.'''
         _linkbot.Linkbot.stop(self, mask)
 
+    # MISC
+
+    def _recordAnglesCb(self, jointNo, angle, timestamp):
+        self._recordTimes[jointNo-1].append(timestamp)
+        self._recordAngles[jointNo-1].append(angle)
+    
+    def recordAnglesBegin(self):
+        self._recordTimes = ([], [], [])
+        self._recordAngles = ([], [], [])
+        self.enableEncoderEvents(1.0, self._recordAnglesCb)
+
+    def recordAnglesEnd(self):
+        self.disableEncoderEvents()
+        minTimes = []
+        for t in self._recordTimes:
+            if len(t) > 0:
+                minTimes.append(t[0])
+        initTime = min(minTimes)
+        fixedTimes = ()
+        for times in self._recordTimes:
+            fixedTimes += (list(map(lambda x: (x - initTime)/1000.0, times)), )
+
+        return (fixedTimes, self._recordAngles)
+
     # CALLBACKS
 
     def disableAccelerometerEvents(self):
@@ -586,6 +627,9 @@ class Linkbot (_linkbot.Linkbot):
 
     def _setSerialId(self, serialId):
         _linkbot.Linkbot.writeEeprom(self, 0x412, serialId.encode())
+
+    def _setHwVersion(self, major, minor, micro):
+        self.writeEeprom(0x420, bytearray([major, minor, micro]))
 
 class ArduinoLinkbot(Linkbot):
     TWI_ADDR = 0x03
