@@ -101,6 +101,9 @@ def main():
 
   linkbot = TestLinkbot(serialID)
 
+  # Get firmware checksum
+  print('Firmware checksum:', linkbot.readEeprom(0x423, 2))
+
   # Test buzzer
   print('Testing buzzer...')
   for i in range(440, 550, 5):

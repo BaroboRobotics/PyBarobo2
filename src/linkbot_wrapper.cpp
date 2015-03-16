@@ -78,6 +78,18 @@ class Linkbot : public barobo::Linkbot
         {
             m_jointEventCbThread.join();
         }
+        if(m_accelerometerEventCbThread.joinable())
+        {
+            m_accelerometerEventCbThread.join();
+        }
+        if(m_buttonEventCbThread.joinable())
+        {
+            m_buttonEventCbThread.join();
+        }
+        if(m_encoderEventCbThread.joinable())
+        {
+            m_encoderEventCbThread.join();
+        }
         //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
