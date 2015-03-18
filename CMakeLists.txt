@@ -45,5 +45,10 @@ set_target_properties(_linkbot
                       PROPERTIES SUFFIX ${suffix}
                                  PREFIX "")
 
+if(MSVC)
+target_link_libraries(_linkbot sfp cxx-util robot-interface
+    dongle-interface baromesh rpc ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+else()
 target_link_libraries(_linkbot sfp cxx-util robot-interface
     dongle-interface baromesh rpc ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} rt)
+endif()

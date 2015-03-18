@@ -59,13 +59,12 @@ if platform.system() == 'Windows':
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
         subprocess.check_call([
                 'cmake', 
-                '-G', 'MinGW Makefiles', 
-                '-DCMAKE_BUILD_TYPE=Release',
                 projDir])
-    subprocess.check_call(['mingw32-make', 'VERBOSE=1'])
-    shutil.copy(os.path.join(buildDir, '_linkbot.pyd'),
+    subprocess.check_call(['cmake', '--build', '.', '--config', 'release', ])
+    shutil.copy(os.path.join(buildDir, 'release', '_linkbot.pyd'),
         os.path.join(projDir, 'src','linkbot', '_linkbot.pyd'))
-    dlls = ['libgcc_s_dw2-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll']
+    #dlls = ['libgcc_s_dw2-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll']
+    dlls = []
     for dll in dlls:
         shutil.copy(os.path.join(projDir, 'dlls', dll),
             os.path.join(stageDir, 'linkbot', dll))
