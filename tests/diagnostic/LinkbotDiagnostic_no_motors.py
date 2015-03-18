@@ -129,47 +129,25 @@ def main():
   while buttons:
       time.sleep(1)
 
-  con = sql.connect('testlog.db')
-  initialize_tables(con.cursor())
-  cur = con.cursor()
-# Check to see if this linkbot is in our database already. Add it if not
-  cur.execute('SELECT * FROM robot_type WHERE Id=\'{}\''.format(linkbot.getSerialId()))
-  rows = cur.fetchall()
-  formFactor = None
-  if linkbot.getFormFactor() == Linkbot.FormFactor.I:
-    formFactor = "Linkbot-I"
-    motor2index = 2
-  elif linkbot.getFormFactor() == Linkbot.FormFactor.L:
-    formFactor = "Linkbot-L"
-    motor2index = 1
-  else:
-    formFactor = "UNKNOWN"
-  print ("Testing LinkBot {}".format(linkbot.getSerialId()))
-  d = LinkbotDiagnostic(linkbot)
-  results = d.runLinearityTest()
-  now = time.strftime('%Y-%m-%d %H:%M:%S')
-  if len(rows) == 0:
-    cur.execute('INSERT INTO robot_type VALUES(\'{}\', \'{}\')'.format(
-        linkbot.getSerialId(), formFactor))
-  cur.execute("INSERT INTO linearity_tests "
-    "VALUES('{}', '{}', {}, {}, {}, {}, {}, {}, {}, {})".format(
-      linkbot.getSerialId(),
-      now,
-      results[0]['forward_slope'],
-      results[0]['forward_rvalue'],
-      results[0]['backward_slope'],
-      results[0]['backward_rvalue'],
-      results[motor2index]['forward_slope'],
-      results[motor2index]['forward_rvalue'],
-      results[motor2index]['backward_slope'],
-      results[motor2index]['backward_rvalue']))
+  print('Testing motor power...')
+  for i in range(1,4):
+      linkbot.setMotorPower(i, 128)
+      time.sleep(1)
+      linkbot.setMotorPower(i, -128)
+      time.sleep(1)
+      linkbot.setMotorPower(i, 0)
+    
+  print('Testing encoders... Move the encoders around to generate encoder events.')
 
-  con.commit()
-  con.close()
-  linkbot.setBuzzerFrequency(440)
-  time.sleep(0.5)
-  linkbot.setBuzzerFrequency(0)
+  def encoderCB(jointNo, angle, timestamp):
+    print(jointNo, angle, timestamp)
+  
 
+  linkbot.enableEncoderEvents(5, encoderCB)
+
+  input('Press Enter to quit.')
+
+  linkbot.disableEncoderEvents()
 
 if __name__ == '__main__':
   main()

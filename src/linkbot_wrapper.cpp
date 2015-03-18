@@ -534,6 +534,10 @@ BOOST_PYTHON_MODULE(_linkbot)
         #include"linkbot_functions.x.h"
         .def("moveWait", &Linkbot::moveWait)
         .def("_releaseCallbacks", &Linkbot::releaseCallbacks)
+        .def("setJointStates", static_cast<void (Linkbot::*)(int, 
+            barobo::JointState::Type, double,
+            barobo::JointState::Type, double,
+            barobo::JointState::Type, double)>(&Linkbot::setJointStates))
         ;
     #undef LINKBOT_FUNCTION
 }

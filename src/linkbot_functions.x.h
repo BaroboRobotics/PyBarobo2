@@ -29,7 +29,6 @@ LINKBOT_FUNCTION(getJointSafetyThresholds, "stub")
 LINKBOT_FUNCTION(resetEncoderRevs, "stub")
 LINKBOT_FUNCTION(setLedColor, "stub")
 LINKBOT_FUNCTION(setJointSpeeds, "stub")
-LINKBOT_FUNCTION(setJointStates, "stub")
 LINKBOT_FUNCTION(setBuzzerFrequency, "stub")
 LINKBOT_FUNCTION(setJointSafetyThresholds, "stub")
 
