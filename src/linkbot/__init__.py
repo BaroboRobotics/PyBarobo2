@@ -504,12 +504,22 @@ class Linkbot (_linkbot.Linkbot):
         self._recordAngles[jointNo-1].append(angle)
     
     def recordAnglesBegin(self):
-        self._recordTimes = ([], [], [])
-        self._recordAngles = ([], [], [])
+        # Get the initial angles
+        (timestamp, a1, a2, a3) = _linkbot.Linkbot.getJointAngles(self)
+        self._recordTimes = ([timestamp], [timestamp], [timestamp])
+        self._recordAngles = ([a1], [a2], [a3])
         self.enableEncoderEvents(1.0, self._recordAnglesCb)
 
     def recordAnglesEnd(self):
         self.disableEncoderEvents()
+        # Get last angles
+        (timestamp, a1, a2, a3) = _linkbot.Linkbot.getJointAngles(self)
+        for i, _ in enumerate(self._recordTimes):
+            self._recordTimes[i].append(timestamp)
+        self._recordAngles[0].append(a1)
+        self._recordAngles[1].append(a2)
+        self._recordAngles[2].append(a3)
+
         minTimes = []
         for t in self._recordTimes:
             if len(t) > 0:

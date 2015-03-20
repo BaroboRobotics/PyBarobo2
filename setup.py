@@ -63,7 +63,7 @@ if platform.system() == 'Windows':
     subprocess.check_call(['cmake', '--build', '.', '--config', 'release', ])
     shutil.copy(os.path.join(buildDir, 'release', '_linkbot.pyd'),
         os.path.join(projDir, 'src','linkbot', '_linkbot.pyd'))
-    #dlls = ['libgcc_s_dw2-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll']
+    dlls = ['msvcp120.dll', 'msvcr120.dll']
     dlls = []
     for dll in dlls:
         shutil.copy(os.path.join(projDir, 'dlls', dll),
