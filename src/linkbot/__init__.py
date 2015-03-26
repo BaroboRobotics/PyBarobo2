@@ -119,6 +119,9 @@ class Linkbot (_linkbot.Linkbot):
     def getAccelerometerData(self):
         return self.getAccelerometer()
 
+    def getBatteryVoltage(self):
+        return _linkbot.Linkbot.getBatteryVoltage(self)
+
     def getJointAngle(self, jointNo):
         '''
         Get the current angle for a particular joint
@@ -155,6 +158,9 @@ class Linkbot (_linkbot.Linkbot):
 
     def getJointSafetyThresholds(self):
         return _linkbot.Linkbot.getJointSafetyThresholds(self)
+
+    def getJointSafetyAngles(self):
+        return _linkbot.Linkbot.getJointSafetyAngles(self)
 
     def getJointSpeed(self, jointNo):
         """Get the current speed for a joint
@@ -199,6 +205,9 @@ class Linkbot (_linkbot.Linkbot):
         _linkbot.Linkbot.setBuzzerFrequency(self, float(freq))
 
     def setJointSafetyThresholds(self, t1 = 100, t2 = 100, t3 = 100, mask=0x07):
+        _linkbot.Linkbot.setJointSafetyThresholds(self, mask, t1, t2, t3)
+
+    def setJointSafetyAngles(self, t1 = 10.0, t2 = 10.0, t3 = 10.0, mask=0x07):
         _linkbot.Linkbot.setJointSafetyThresholds(self, mask, t1, t2, t3)
 
     def setJointSpeed(self, jointNo, speed):
