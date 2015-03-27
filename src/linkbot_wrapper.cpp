@@ -110,6 +110,12 @@ class Linkbot : public barobo::Linkbot
         return boost::python::make_tuple(timestamp, x, y, z);
     }
 
+    double getBatteryVoltage() {
+        double v;
+        barobo::Linkbot::getBatteryVoltage(v);
+        return v;
+    }
+
     int getFormFactor() {
         barobo::FormFactor::Type form;
         barobo::Linkbot::getFormFactor(form);
@@ -158,6 +164,13 @@ class Linkbot : public barobo::Linkbot
     {
         int t1, t2, t3;
         barobo::Linkbot::getJointSafetyThresholds(t1, t2, t3);
+        return boost::python::make_tuple(t1, t2, t3);
+    }
+
+    boost::python::tuple getJointSafetyAngles()
+    {
+        double t1, t2, t3;
+        barobo::Linkbot::getJointSafetyAngles(t1, t2, t3);
         return boost::python::make_tuple(t1, t2, t3);
     }
 

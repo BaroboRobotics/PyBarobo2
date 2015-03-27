@@ -1,3 +1,17 @@
+2.2.0
+=====
+- Built against new Linkbot Labs 0.7.6
+
+2.1.3
+=====
+- Added missing dlls
+
+2.1.2
+=====
+- Added functions to access TWI
+- Added functions to access Linkbot Arduino shield
+- Fixed an exception-on-exit
+
 2.1.1
 =====
 - Improved robustness of moveWait().

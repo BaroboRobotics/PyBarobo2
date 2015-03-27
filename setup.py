@@ -64,7 +64,6 @@ if platform.system() == 'Windows':
     shutil.copy(os.path.join(buildDir, 'release', '_linkbot.pyd'),
         os.path.join(projDir, 'src','linkbot', '_linkbot.pyd'))
     dlls = ['msvcp120.dll', 'msvcr120.dll']
-    dlls = []
     for dll in dlls:
         shutil.copy(os.path.join(projDir, 'dlls', dll),
             os.path.join(stageDir, 'linkbot', dll))
