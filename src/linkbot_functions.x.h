@@ -17,6 +17,7 @@ LINKBOT_FUNCTION(stop, "stub")
 
 // GETTERS
 LINKBOT_FUNCTION(getAccelerometer, "stub")
+LINKBOT_FUNCTION(getBatteryVoltage, "stub")
 LINKBOT_FUNCTION(getFormFactor, "stub")
 LINKBOT_FUNCTION(getJointAngles, "stub")
 LINKBOT_FUNCTION(getJointSpeeds, "stub")
@@ -31,6 +32,7 @@ LINKBOT_FUNCTION(setLedColor, "stub")
 LINKBOT_FUNCTION(setJointSpeeds, "stub")
 LINKBOT_FUNCTION(setBuzzerFrequency, "stub")
 LINKBOT_FUNCTION(setJointSafetyThresholds, "stub")
+LINKBOT_FUNCTION(setJointSafetyAngles, "stub")
 
 // CALLBACKS
 LINKBOT_FUNCTION(setAccelerometerEventCallback, "stub")
