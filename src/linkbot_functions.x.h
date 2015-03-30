@@ -24,6 +24,7 @@ LINKBOT_FUNCTION(getJointSpeeds, "stub")
 LINKBOT_FUNCTION(getJointStates, "stub")
 LINKBOT_FUNCTION(getLedColor, "stub")
 LINKBOT_FUNCTION(getVersions, "stub")
+LINKBOT_FUNCTION(getJointSafetyAngles, "stub")
 LINKBOT_FUNCTION(getJointSafetyThresholds, "stub")
 
 // SETTERS

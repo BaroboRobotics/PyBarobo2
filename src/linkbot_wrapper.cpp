@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <queue>
 #include <condition_variable>
 #include "baromesh/linkbot.hpp"
 #include <boost/python.hpp>
@@ -29,6 +30,21 @@ void translate_exception(move_exception const& e)
     // Use the Python 'C' API to set up an exception object
     PyErr_SetString(PyExc_Warning, e.what());
 }
+
+/* The following is used to store and use function argument lists in a delayed
+ * manner, as detailed here:
+ http://stackoverflow.com/questions/7858817/unpacking-a-tuple-to-call-a-matching-function-pointer
+ */
+template<int ...>
+struct seq { };
+
+template<int N, int ...S>
+struct gens : gens<N-1, N-1, S...> { };
+
+template<int ...S>
+struct gens<0, S...> {
+  typedef seq<S...> type;
+};
 
 class Linkbot : public barobo::Linkbot
 {
@@ -62,43 +78,24 @@ class Linkbot : public barobo::Linkbot
 
     ~Linkbot()
     {
-        if(!m_accelerometerEventCbObject.is_none()) {
-            barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
-        }
-        if(!m_buttonEventCbObject.is_none()) {
-            barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
-        }
-        if(!m_encoderEventCbObject.is_none()) {
-            barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
-        }
-        if(!m_jointEventCbObject.is_none()) {
-            barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
-        }
-        if(m_jointEventCbThread.joinable())
-        {
-            m_jointEventCbThread.join();
-        }
-        if(m_accelerometerEventCbThread.joinable())
-        {
-            m_accelerometerEventCbThread.join();
-        }
-        if(m_buttonEventCbThread.joinable())
-        {
-            m_buttonEventCbThread.join();
-        }
-        if(m_encoderEventCbThread.joinable())
-        {
-            m_encoderEventCbThread.join();
-        }
-        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
+        barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
+        barobo::Linkbot::setJointEventCallback(nullptr, nullptr);
+        m_accelerometerEventHandler.stop();
+        m_buttonEventHandler.stop();
+        m_encoderEventHandler.stop();
+        m_jointEventHandler.stop();
     }
 
     void releaseCallbacks()
     {
+        /*
         m_buttonEventCbObject = boost::python::object();
         m_encoderEventCbObject = boost::python::object();
         m_jointEventCbObject = boost::python::object();
         m_accelerometerEventCbObject = boost::python::object();
+        */
     }
 
 /* GETTERS */
@@ -235,7 +232,7 @@ class Linkbot : public barobo::Linkbot
 
     void setButtonEventCallback(boost::python::object func)
     {
-        m_buttonEventCbObject = func;
+        m_buttonEventHandler.cbObject = func;
         if(func.is_none()) {
             barobo::Linkbot::setButtonEventCallback(
                     nullptr, nullptr);
@@ -252,45 +249,12 @@ class Linkbot : public barobo::Linkbot
                                     void* userData)
     {
         auto l = static_cast<Linkbot*>(userData);
-        if(!l->m_buttonEventCbObject.is_none()) {
-            if(l->m_buttonEventCbThread.joinable())
-                l->m_buttonEventCbThread.join();
-            std::thread cbThread( &Linkbot::buttonEventCallbackThread,
-                    buttonNo,
-                    event,
-                    timestamp,
-                    userData);
-            l->m_buttonEventCbThread.swap(cbThread);
-            if(cbThread.joinable())
-                cbThread.join();
-        }
-    }
-
-    static void buttonEventCallbackThread(int buttonNo,
-                                    barobo::ButtonState::Type event,
-                                    int timestamp,
-                                    void* userData)
-    {
-        auto l = static_cast<Linkbot*>(userData);
-        auto &func = l->m_buttonEventCbObject;
-    
-        if(!func.is_none()) {
-            /* Lock the Python GIL */
-            PyGILState_STATE gstate;
-            gstate = PyGILState_Ensure();
-            try {
-                (func)(buttonNo, static_cast<int>(event), timestamp);
-            } catch (...) {
-                boost::python::handle_exception();
-            }
-            /* Release the Python GIL */
-            PyGILState_Release(gstate);
-        }
+        l->m_buttonEventHandler.push(buttonNo, event, timestamp);
     }
 
     void setEncoderEventCallback(boost::python::object func, float granularity)
     {
-        m_encoderEventCbObject = func;
+        m_encoderEventHandler.cbObject = func;
         if(func.is_none()) {
             barobo::Linkbot::setEncoderEventCallback(
                     nullptr, granularity, nullptr);
@@ -308,43 +272,12 @@ class Linkbot : public barobo::Linkbot
                                      void* userData)
     {
         auto l = static_cast<Linkbot*>(userData);
-        if(!l->m_encoderEventCbObject.is_none()) {
-            if(l->m_encoderEventCbThread.joinable())
-                l->m_encoderEventCbThread.join();
-            std::thread cbThread ( &Linkbot::encoderEventCallbackThread,
-                    jointNo,
-                    anglePosition,
-                    timestamp,
-                    userData );
-            l->m_encoderEventCbThread.swap(cbThread);
-            if(cbThread.joinable())
-                cbThread.join();
-        }
-    }
-
-    static void encoderEventCallbackThread(int jointNo,
-                                    double anglePosition,
-                                    int timestamp,
-                                    void* userData)
-    {
-        auto l = static_cast<Linkbot*>(userData);
-        auto &func = l->m_encoderEventCbObject;
-
-        if(!func.is_none()) {
-            /* Lock the Python GIL */
-            PyGILState_STATE gstate;
-            gstate = PyGILState_Ensure();
-
-            (func)(jointNo+1, anglePosition, timestamp);
-
-            /* Release the Python GIL */
-            PyGILState_Release(gstate);
-        }
+        l->m_encoderEventHandler.push(jointNo+1, anglePosition, timestamp);
     }
 
     void setJointEventCallback(boost::python::object func)
     {
-        m_jointEventCbObject = func;
+        m_jointEventHandler.cbObject = func;
     }
 
     static void jointEventCallback(int jointNo, 
@@ -364,52 +297,20 @@ class Linkbot : public barobo::Linkbot
                 lock.unlock();
             });
         jointEvent.detach();
-    
-        if(!l->m_jointEventCbObject.is_none()) {
-            if(l->m_jointEventCbThread.joinable())
-                l->m_jointEventCbThread.join();
-            std::thread cbThread ( &Linkbot::jointEventCallbackThread,
-                    jointNo,
-                    event,
-                    timestamp,
-                    userData);
-            l->m_jointEventCbThread.swap(cbThread);
-            if(cbThread.joinable())
-                cbThread.join();
-        }
-    }
-
-   static void jointEventCallbackThread(int jointNo,
-                                   barobo::JointState::Type event,
-                                   int timestamp,
-                                   void* userData)
-    {
-        /* The userData should be a Linkbot object */
-        auto l = static_cast<Linkbot*>(userData);
-        auto &func = l->m_jointEventCbObject;
         
-        if(!func.is_none()) {
-            /* Lock the Python GIL */
-            PyGILState_STATE gstate;
-            gstate = PyGILState_Ensure();
-
-            (func)(jointNo, static_cast<int>(event), timestamp);
-
-            /* Release the Python GIL */
-            PyGILState_Release(gstate);
-        }
+        l->m_jointEventHandler.push(jointNo, event, timestamp);
     }
 
     void setAccelerometerEventCallback(boost::python::object func)
     {
-        m_accelerometerEventCbObject = func;
+        m_accelerometerEventHandler.cbObject = func;
         if(func.is_none()) {
             barobo::Linkbot::setAccelerometerEventCallback(
                     nullptr, nullptr);
         } else {
             barobo::Linkbot::setAccelerometerEventCallback(
                     &Linkbot::accelerometerEventCallback,
-                    &m_accelerometerEventCbObject);
+                    this);
         }
     }
 
@@ -419,30 +320,8 @@ class Linkbot : public barobo::Linkbot
                                            int timestamp,
                                            void* userData)
     {
-        std::thread cbThread( &Linkbot::accelerometerEventCallbackThread,
-                              x, y, z, timestamp, userData);
-        cbThread.detach();
-    }
-
-    static void accelerometerEventCallbackThread(double x,
-                                           double y,
-                                           double z,
-                                           int timestamp,
-                                           void* userData)
-    {
-        /* Lock the Python GIL */
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
-
-        /* The userData should be a python object */
-        boost::python::object* func =
-            static_cast<boost::python::object*>(userData);
-        if(!func->is_none()) {
-            (*func)(x, y, z, timestamp);
-        }
-
-        /* Release the Python GIL */
-        PyGILState_Release(gstate);
+        auto l = static_cast<Linkbot*>(userData);
+        l->m_accelerometerEventHandler.push(x,y,z,timestamp);
     }
 
     /* MISC */
@@ -518,16 +397,67 @@ class Linkbot : public barobo::Linkbot
         return retval;
     }
 
+    template <typename... Args> struct EventHandler {
+        EventHandler() : active(true) 
+        { 
+            /* Start the worker thread */
+            std::thread cbThread (
+                [this] () {
+                    std::unique_lock<std::mutex> l(lock);
+                    while(active) {
+                        while( (queue.size() == 0) && (active) ) {
+                            cond.wait(l);
+                        }
+                        l.unlock();
+                        delayed_dispatch();
+                        l.lock();
+                    }
+                });
+            thread.swap(cbThread);
+        }
+        boost::python::object cbObject;
+        std::thread thread;
+        std::mutex lock;
+        std::condition_variable cond;
+        bool active;
+        std::queue<std::tuple<Args...>> queue;
+
+        void push(Args... args) {
+            std::unique_lock<std::mutex> l(lock);
+            queue.push(std::make_tuple(args...));
+            cond.notify_all();
+        }
+
+        void stop() {
+            active = false;
+            cond.notify_all();
+            thread.join();
+        }
+
+        void delayed_dispatch() {
+            callFunc(typename gens<sizeof...(Args)>::type());
+        }
+
+        template<int ...S>
+        void callFunc(seq<S...>) {
+            if(!cbObject.is_none()) {
+                auto params = queue.front();
+                queue.pop();
+                PyGILState_STATE gstate;
+                gstate = PyGILState_Ensure();
+                cbObject(std::get<S>(params) ...);
+                PyGILState_Release(gstate);
+            }
+        }
+    };
+
     private:
         int m_motorMask;
-        boost::python::object m_buttonEventCbObject;
-        std::thread m_buttonEventCbThread;
-        boost::python::object m_encoderEventCbObject;
-        std::thread m_encoderEventCbThread;
-        boost::python::object m_jointEventCbObject;
-        std::thread m_jointEventCbThread;
-        boost::python::object m_accelerometerEventCbObject;
-        std::thread m_accelerometerEventCbThread;
+
+        EventHandler<int, int, int> m_buttonEventHandler;
+        EventHandler<int, double, int> m_encoderEventHandler;
+        EventHandler<double, double, double, int> m_accelerometerEventHandler;
+        EventHandler<int, int, int> m_jointEventHandler;
 
         barobo::JointState::Type m_jointStates[3];
         bool m_jointStatesDirty;
