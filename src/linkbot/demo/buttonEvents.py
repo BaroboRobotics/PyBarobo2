@@ -22,5 +22,4 @@ if __name__ == "__main__":
     myLinkbot.connect()
     myLinkbot.enableButtonEvents()
     input('Press enter to quit.')
-    print(gc.get_referrers(myLinkbot))
 

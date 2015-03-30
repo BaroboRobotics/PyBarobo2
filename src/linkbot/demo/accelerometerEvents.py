@@ -23,7 +23,7 @@ class AccelLinkbot (linkbot.Linkbot):
         
 
 if __name__ == "__main__":
-    dongle = linkbot.Linkbot('4QFS')
+    dongle = linkbot.Linkbot()
     dongle.connect()
 
     if len(sys.argv) < 2:

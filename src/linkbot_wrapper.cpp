@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <queue>
 #include <condition_variable>
 #include "baromesh/linkbot.hpp"
 #include <boost/python.hpp>
@@ -58,6 +59,8 @@ class Linkbot : public barobo::Linkbot
                 m_motorMask = 0x07;
                 break;
         }
+
+        m_encoderEventRun = true;
     }
 
     ~Linkbot()
@@ -86,6 +89,8 @@ class Linkbot : public barobo::Linkbot
         {
             m_buttonEventCbThread.join();
         }
+        m_encoderEventRun = false;
+        m_encoderEventQueueCond.notify_all();
         if(m_encoderEventCbThread.joinable())
         {
             m_encoderEventCbThread.join();
@@ -309,16 +314,17 @@ class Linkbot : public barobo::Linkbot
     {
         auto l = static_cast<Linkbot*>(userData);
         if(!l->m_encoderEventCbObject.is_none()) {
-            if(l->m_encoderEventCbThread.joinable())
-                l->m_encoderEventCbThread.join();
-            std::thread cbThread ( &Linkbot::encoderEventCallbackThread,
-                    jointNo,
-                    anglePosition,
-                    timestamp,
-                    userData );
-            l->m_encoderEventCbThread.swap(cbThread);
-            if(cbThread.joinable())
-                cbThread.join();
+            std::unique_lock<std::mutex> lock(l->m_encoderEventQueueLock);
+            l->m_encoderEventQueue.push(std::make_tuple(jointNo, anglePosition, timestamp));
+            l->m_encoderEventQueueCond.notify_all();
+            if(!l->m_encoderEventCbThread.joinable()) {
+                std::thread cbThread ( &Linkbot::encoderEventCallbackThread,
+                        jointNo,
+                        anglePosition,
+                        timestamp,
+                        userData );
+                l->m_encoderEventCbThread.swap(cbThread);
+            }
         }
     }
 
@@ -329,16 +335,27 @@ class Linkbot : public barobo::Linkbot
     {
         auto l = static_cast<Linkbot*>(userData);
         auto &func = l->m_encoderEventCbObject;
-
-        if(!func.is_none()) {
-            /* Lock the Python GIL */
-            PyGILState_STATE gstate;
-            gstate = PyGILState_Ensure();
-
-            (func)(jointNo+1, anglePosition, timestamp);
-
-            /* Release the Python GIL */
-            PyGILState_Release(gstate);
+        std::unique_lock<std::mutex> lock(l->m_encoderEventQueueLock);
+        while ( l->m_encoderEventRun ) {
+            while(
+                (l->m_encoderEventQueue.size() == 0) &&
+                (l->m_encoderEventRun)
+                ) 
+            {
+                l->m_encoderEventQueueCond.wait(lock);
+            }
+            if(!func.is_none()) {
+                auto elem = l->m_encoderEventQueue.front();
+                l->m_encoderEventQueue.pop();
+                lock.unlock();
+                /* Lock the Python GIL */
+                PyGILState_STATE gstate;
+                gstate = PyGILState_Ensure();
+                (func)(std::get<0>(elem)+1, std::get<1>(elem), std::get<2>(elem));
+                /* Release the Python GIL */
+                PyGILState_Release(gstate);
+                lock.lock();
+            }
         }
     }
 
@@ -387,7 +404,8 @@ class Linkbot : public barobo::Linkbot
         /* The userData should be a Linkbot object */
         auto l = static_cast<Linkbot*>(userData);
         auto &func = l->m_jointEventCbObject;
-        
+       
+        std::cout<<"joint start\n";
         if(!func.is_none()) {
             /* Lock the Python GIL */
             PyGILState_STATE gstate;
@@ -398,6 +416,7 @@ class Linkbot : public barobo::Linkbot
             /* Release the Python GIL */
             PyGILState_Release(gstate);
         }
+        std::cout<<"joint end\n";
     }
 
     void setAccelerometerEventCallback(boost::python::object func)
@@ -533,6 +552,14 @@ class Linkbot : public barobo::Linkbot
         bool m_jointStatesDirty;
         std::mutex m_jointStatesLock;
         std::condition_variable m_jointStatesCv;
+
+        // Encoder Event: (jointNo, angle, timestamp)
+        using EncoderEvent = std::tuple<int,double,int>;
+        using EncoderEventQueue = std::queue<EncoderEvent>;
+        EncoderEventQueue m_encoderEventQueue;
+        std::mutex m_encoderEventQueueLock;
+        std::condition_variable m_encoderEventQueueCond;
+        bool m_encoderEventRun;
 
         boost::python::object m_linkbot;
 };
