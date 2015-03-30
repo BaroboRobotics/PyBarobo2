@@ -401,8 +401,8 @@ class Linkbot : public barobo::Linkbot
         EventHandler() : active(true) 
         { 
             /* Start the worker thread */
-            std::thread cbThread (
-                [this] () {
+            std::thread cbThread {
+                [this] {
                     std::unique_lock<std::mutex> l(lock);
                     while(active) {
                         while( (queue.size() == 0) && (active) ) {
@@ -412,7 +412,7 @@ class Linkbot : public barobo::Linkbot
                         delayed_dispatch();
                         l.lock();
                     }
-                });
+                }};
             thread.swap(cbThread);
         }
         boost::python::object cbObject;
