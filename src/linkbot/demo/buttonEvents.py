@@ -11,6 +11,7 @@ class ButtonLinkbot (linkbot.Linkbot):
         linkbot.Linkbot.__init__(self, *args, **kwargs)
 
     def buttonEventCB(self, *args, **kwargs):
+        self.setLedColor(255, 0, 0)
         print(args, kwargs)
 
 if __name__ == "__main__":

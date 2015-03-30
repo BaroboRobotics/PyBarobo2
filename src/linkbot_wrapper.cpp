@@ -78,9 +78,7 @@ class Linkbot : public barobo::Linkbot
 
     ~Linkbot()
     {
-        if(!m_accelerometerEventCbObject.is_none()) {
-            barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
-        }
+        barobo::Linkbot::setAccelerometerEventCallback(nullptr, nullptr);
         barobo::Linkbot::setButtonEventCallback(nullptr, nullptr);
         barobo::Linkbot::setEncoderEventCallback(nullptr, 0, nullptr);
         if(!m_jointEventCbObject.is_none()) {
@@ -90,10 +88,7 @@ class Linkbot : public barobo::Linkbot
         {
             m_jointEventCbThread.join();
         }
-        if(m_accelerometerEventCbThread.joinable())
-        {
-            m_accelerometerEventCbThread.join();
-        }
+        m_accelerometerEventHandler.stop();
         m_buttonEventHandler.stop();
         m_encoderEventHandler.stop();
         //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -348,14 +343,14 @@ class Linkbot : public barobo::Linkbot
 
     void setAccelerometerEventCallback(boost::python::object func)
     {
-        m_accelerometerEventCbObject = func;
+        m_accelerometerEventHandler.cbObject = func;
         if(func.is_none()) {
             barobo::Linkbot::setAccelerometerEventCallback(
                     nullptr, nullptr);
         } else {
             barobo::Linkbot::setAccelerometerEventCallback(
                     &Linkbot::accelerometerEventCallback,
-                    &m_accelerometerEventCbObject);
+                    this);
         }
     }
 
@@ -365,30 +360,8 @@ class Linkbot : public barobo::Linkbot
                                            int timestamp,
                                            void* userData)
     {
-        std::thread cbThread( &Linkbot::accelerometerEventCallbackThread,
-                              x, y, z, timestamp, userData);
-        cbThread.detach();
-    }
-
-    static void accelerometerEventCallbackThread(double x,
-                                           double y,
-                                           double z,
-                                           int timestamp,
-                                           void* userData)
-    {
-        /* Lock the Python GIL */
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
-
-        /* The userData should be a python object */
-        boost::python::object* func =
-            static_cast<boost::python::object*>(userData);
-        if(!func->is_none()) {
-            (*func)(x, y, z, timestamp);
-        }
-
-        /* Release the Python GIL */
-        PyGILState_Release(gstate);
+        auto l = static_cast<Linkbot*>(userData);
+        l->m_accelerometerEventHandler.push(x,y,z,timestamp);
     }
 
     /* MISC */
@@ -523,11 +496,10 @@ class Linkbot : public barobo::Linkbot
 
         EventHandler<int, int, int> m_buttonEventHandler;
         EventHandler<int, double, int> m_encoderEventHandler;
+        EventHandler<double, double, double, int> m_accelerometerEventHandler;
 
         boost::python::object m_jointEventCbObject;
         std::thread m_jointEventCbThread;
-        boost::python::object m_accelerometerEventCbObject;
-        std::thread m_accelerometerEventCbThread;
 
         barobo::JointState::Type m_jointStates[3];
         bool m_jointStatesDirty;
