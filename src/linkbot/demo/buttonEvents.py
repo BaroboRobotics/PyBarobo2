@@ -11,7 +11,7 @@ class ButtonLinkbot (linkbot.Linkbot):
         linkbot.Linkbot.__init__(self, *args, **kwargs)
 
     def buttonEventCB(self, *args, **kwargs):
-        print('button')
+        print(args, kwargs)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -19,7 +19,6 @@ if __name__ == "__main__":
         quit()
     serialID = sys.argv[1]
     myLinkbot = ButtonLinkbot(serialID)
-    myLinkbot.connect()
     myLinkbot.enableButtonEvents()
     input('Press enter to quit.')
 
