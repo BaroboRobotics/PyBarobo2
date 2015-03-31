@@ -286,6 +286,7 @@ class Linkbot (_linkbot.Linkbot):
 
     def driveNB(self, j1, j2, j3, mask=0x07):
         """Non blocking version of :func:`Linkbot.drive`."""
+        print('Python drive')
         _linkbot.Linkbot.drive(self, mask, j1, j2, j3)
 
     def driveJoint(self, jointNo, angle):

@@ -1,3 +1,8 @@
+2.2.1
+=====
+- Fixed deadlock; Module would sometimes deadlock if main thread called an RPC
+  function while an event handler callback function was executing.
+
 2.2.0
 =====
 - Built against new Linkbot Labs 0.7.6
