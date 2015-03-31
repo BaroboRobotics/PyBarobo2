@@ -13,13 +13,17 @@ if __name__ == "__main__":
     time.sleep(2)
     myLinkbot.connect()
     angle = 90
-    for _ in range(7):
-        myLinkbot.move(angle, angle, angle)
-        myLinkbot.move(-angle, -angle, -angle)
-        angle *= 0.5
+    for i in range(20):
+        print(i)
+        for _ in range(7):
+            print(angle)
+            myLinkbot.move(angle, angle, angle)
+            myLinkbot.move(-angle, -angle, -angle)
+            angle *= 0.5
 
-    for _ in range(7):
-        angle *= 2
-        myLinkbot.move(angle, angle, angle)
-        myLinkbot.move(-angle, -angle, -angle)
+        for _ in range(7):
+            print(angle)
+            angle *= 2
+            myLinkbot.move(angle, angle, angle)
+            myLinkbot.move(-angle, -angle, -angle)
 
