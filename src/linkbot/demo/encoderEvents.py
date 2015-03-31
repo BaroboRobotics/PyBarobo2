@@ -16,7 +16,6 @@ class EncoderLinkbot (linkbot.Linkbot):
         if jointNo == 1:
             self.encoderData.append(angle)
             self.encoderTimes.append(timestamp)
-        print('Py enc end')
 
     def plot(self):
         print(self.encoderTimes)
