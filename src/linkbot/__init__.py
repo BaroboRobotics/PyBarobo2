@@ -53,12 +53,22 @@ class Linkbot (_linkbot.Linkbot):
         def state(self, index):
             return self._state[index]
 
+        def states(self):
+            return self._state
+
+        def set_moving(self, mask):
+            self.lock()
+            for i in range(3):
+                if mask & (1<<i):
+                    self._state[i] = self.MOVING
+            self.unlock()
+
         def set_state(self, index, state):
             self._state[index] = state
             self._lock.notify_all()
 
         def wait(self, timeout=None):
-            self._lock.wait(timeout)
+            return self._lock.wait(timeout)
 
     def __init__(self, serialId = 'LOCL'):
         """Create a new Linkbot object
@@ -88,6 +98,9 @@ class Linkbot (_linkbot.Linkbot):
             self._motorMask = 0x07
         else:
             self._motorMask = 0x01
+
+        # Set up joint event callback for moveWait
+        self.enableJointEvents()
 
 
 # Connection
@@ -286,6 +299,7 @@ class Linkbot (_linkbot.Linkbot):
 
     def driveNB(self, j1, j2, j3, mask=0x07):
         """Non blocking version of :func:`Linkbot.drive`."""
+        self._jointStates.set_moving(mask)
         _linkbot.Linkbot.drive(self, mask, j1, j2, j3)
 
     def driveJoint(self, jointNo, angle):
@@ -356,8 +370,9 @@ class Linkbot (_linkbot.Linkbot):
         
     def driveToNB(self, j1, j2, j3, mask=0x07):
         """Non-blocking version of :func:`Linkbot.driveTo`"""
+        self._jointStates.set_moving(mask)
         _linkbot.Linkbot.driveTo(self, mask, j1, j2, j3)
-    
+
     def move(self, j1, j2, j3, mask=0x07):
         '''Move the joints on a robot and wait until all movements are finished.
 
@@ -387,6 +402,7 @@ class Linkbot (_linkbot.Linkbot):
             robot.setLEDColor(0, 0, 255)
 
         '''
+        self._jointStates.set_moving(mask)
         _linkbot.Linkbot.move(self, mask, j1, j2, j3)
 
     def moveContinuous(self, dir1, dir2, dir3, mask=0x07):
@@ -406,6 +422,7 @@ class Linkbot (_linkbot.Linkbot):
               whatever speed the joint was last set to with the
               setJointSpeeds() function.
         '''
+        self._jointStates.set_moving(mask)
         _linkbot.Linkbot.moveContinuous(self, mask, dir1, dir2, dir3)
 
     def moveJoint(self, jointNo, angle):
@@ -489,12 +506,35 @@ class Linkbot (_linkbot.Linkbot):
         self.moveWait(mask)
 
     def moveToNB(self, j1, j2, j3, mask=0x07):
+        self._jointStates.set_moving(mask)
         _linkbot.Linkbot.moveTo(self, mask, j1, j2, j3)
 
     def moveWait(self, mask=0x07):
         ''' Wait for all masked joints (all joints by default) to stop moving.
         '''
-        _linkbot.Linkbot.moveWait(self, mask)
+        mask &= self._motorMask
+        # First, check the current joint states.
+        def isMoving(states, mask):
+            moving = False
+            for i,s in enumerate(states):
+                if not (mask & (1<<i) ):
+                    continue
+                if s is Linkbot.JointStates.MOVING:
+                    moving = True
+                    break
+            return moving
+
+        self._jointStates.lock()
+        if not isMoving(self._jointStates.states(), mask):
+            self._jointStates.unlock()
+            return
+        while isMoving(self._jointStates.states(), mask):
+            notified = self._jointStates.wait(3)
+            if not notified: # We timed out; refresh states
+                states = self.getJointStates()[1:];
+                for i, s in enumerate(states):
+                    self._jointStates.set_state(i, s)
+        self._jointStates.unlock()
 
     def stopJoint(self, jointNo):
         '''
@@ -635,6 +675,13 @@ class Linkbot (_linkbot.Linkbot):
             self.__accelCb(x, y, z, timestamp)
 
     def jointEventCB(self, jointNo, state, timestamp):
+        ''' Joint event callback function.
+
+        This function is called when the state of joint changes. For instance,
+        if a moving joint stops, this callback function is invoked.
+
+        This function is used internally by the moveWait() function and
+        overriding this function is not recommended. '''
         self._jointStates.lock()
         self._jointStates.set_state(jointNo, state)
         self._jointStates.unlock()

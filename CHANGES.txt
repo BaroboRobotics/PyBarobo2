@@ -1,3 +1,8 @@
+2.2.2
+=====
+- Updated to Linkbot Labs 0.7.7 library. 
+- Changed moveWait() to pure Python function.
+
 2.2.1
 =====
 - Fixed deadlock; Module would sometimes deadlock if main thread called an RPC

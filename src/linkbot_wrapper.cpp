@@ -56,10 +56,6 @@ class Linkbot : public barobo::Linkbot
         if (! PyEval_ThreadsInitialized()) {
             PyEval_InitThreads();
         }
-        /* Set up the joint event callback for moveWait() */
-        barobo::Linkbot::setJointEventCallback(
-                &Linkbot::jointEventCallback,
-                this);
 
         barobo::FormFactor::Type formFactor;
         barobo::Linkbot::getFormFactor(formFactor);
@@ -278,6 +274,14 @@ class Linkbot : public barobo::Linkbot
     void setJointEventCallback(boost::python::object func)
     {
         m_jointEventHandler.cbObject = func;
+        if(func.is_none()) {
+            barobo::Linkbot::setJointEventCallback(
+                    nullptr, nullptr);
+        } else {
+            barobo::Linkbot::setJointEventCallback(
+                    &Linkbot::jointEventCallback,
+                    this);
+        }
     }
 
     static void jointEventCallback(int jointNo, 
@@ -287,17 +291,6 @@ class Linkbot : public barobo::Linkbot
     {
         auto l = static_cast<Linkbot*>(userData);
 
-        std::thread jointEvent (
-            [l, jointNo, event] 
-            {
-                std::unique_lock<std::mutex> lock(l->m_jointStatesLock);
-                l->m_jointStates[jointNo] = event;
-                l->m_jointStatesDirty = true;
-                l->m_jointStatesCv.notify_all();
-                lock.unlock();
-            });
-        jointEvent.detach();
-        
         l->m_jointEventHandler.push(jointNo, event, timestamp);
     }
 
