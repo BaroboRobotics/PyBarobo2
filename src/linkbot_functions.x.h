@@ -14,6 +14,9 @@ LINKBOT_FUNCTION(moveContinuous, "stub")
 LINKBOT_FUNCTION(moveTo, "stub")
 LINKBOT_FUNCTION(motorPower, "stub")
 LINKBOT_FUNCTION(stop, "stub")
+LINKBOT_FUNCTION(moveSmooth, "Move motor(s) with smooth accel/decel at the \n"
+"beginning and end of the motion.")
+LINKBOT_FUNCTION(moveAccel, "Accelerate the joints at a specified rate.")
 
 // GETTERS
 LINKBOT_FUNCTION(getAccelerometer, "stub")
@@ -34,6 +37,8 @@ LINKBOT_FUNCTION(setJointSpeeds, "stub")
 LINKBOT_FUNCTION(setBuzzerFrequency, "stub")
 LINKBOT_FUNCTION(setJointSafetyThresholds, "stub")
 LINKBOT_FUNCTION(setJointSafetyAngles, "stub")
+LINKBOT_FUNCTION(setJointAccelI, "stub")
+LINKBOT_FUNCTION(setJointAccelF, "stub")
 
 // CALLBACKS
 LINKBOT_FUNCTION(setAccelerometerEventCallback, "stub")

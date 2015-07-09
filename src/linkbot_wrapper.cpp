@@ -224,6 +224,18 @@ class Linkbot : public barobo::Linkbot
         }
     }
 
+    void moveAccel(int mask,
+        double omega0_i, double timeout0, int modeOnTimeout0,
+        double omega1_i, double timeout1, int modeOnTimeout1,
+        double omega2_i, double timeout2, int modeOnTimeout2)
+    {
+        barobo::Linkbot::moveAccel(
+            mask, 0,
+            omega0_i, timeout0, barobo::JointState::Type(modeOnTimeout0),
+            omega1_i, timeout1, barobo::JointState::Type(modeOnTimeout1),
+            omega2_i, timeout2, barobo::JointState::Type(modeOnTimeout2));
+    }
+
 /* CALLBACKS */
 
     void setButtonEventCallback(boost::python::object func)
@@ -464,6 +476,11 @@ BOOST_PYTHON_MODULE(_linkbot)
 {
     register_exception_translator<move_exception>(&translate_exception);
     boost::filesystem::path::imbue(std::locale("C"));
+    enum_<barobo::JointState::Type>("JointState")
+        .value("coast", barobo::JointState::COAST)
+        .value("hold", barobo::JointState::HOLD)
+        .value("moving", barobo::JointState::MOVING)
+        .value("failure", barobo::JointState::FAILURE);
     #define LINKBOT_FUNCTION(func, docstring) \
     .def(#func, &Linkbot::func, docstring)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
