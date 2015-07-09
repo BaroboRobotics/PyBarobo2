@@ -217,6 +217,20 @@ class Linkbot (_linkbot.Linkbot):
         '''
         _linkbot.Linkbot.setBuzzerFrequency(self, float(freq))
 
+    def setJointAccelerations(self, alpha1, alpha2, alpha3, mask=0x07):
+        '''
+        Set the rate at which joints should accelerate during "smoothed"
+        motions, such as "moveSmooth". Units are in deg/sec/sec.
+        '''
+        _linkbot.Linkbot.setJointAccelI(self, mask, alpha1, alpha2, alpha3)
+
+    def setJointDecelerations(self, alpha1, alpha2, alpha3, mask=0x07):
+        '''
+        Set the rate at which joints should decelerate during "smoothed"
+        motions, such as "moveSmooth". Units are in deg/sec/sec.
+        '''
+        _linkbot.Linkbot.setJointAccelF(self, mask, alpha1, alpha2, alpha3)
+
     def setJointSafetyThresholds(self, t1 = 100, t2 = 100, t3 = 100, mask=0x07):
         _linkbot.Linkbot.setJointSafetyThresholds(self, mask, t1, t2, t3)
 
@@ -500,6 +514,22 @@ class Linkbot (_linkbot.Linkbot):
         '''
         assert(jointNo >= 1 and jointNo <=3)
         self.moveWait(1<<(jointNo-1))
+
+    def moveSmooth(self, j1, j2, j3, mask=0x07):
+        self.moveSmoothNB(j1, j2, j3, mask)
+        self.moveWait(mask)
+
+    def moveSmoothNB(self, j1, j2, j3, mask=0x07):
+        self._jointStates.set_moving(mask)
+        _linkbot.Linkbot.moveSmooth(self, mask, mask, j1, j2, j3)
+
+    def moveSmoothTo(self, j1, j2, j3, mask=0x07):
+        self.moveSmoothToNB(j1, j2, j3, mask)
+        self.moveWait(mask)
+ 
+    def moveSmoothToNB(self, j1, j2, j3, mask=0x07):
+        self._jointStates.set_moving(mask)
+        _linkbot.Linkbot.moveSmooth(self, mask, 0, j1, j2, j3)
 
     def moveTo(self, j1, j2, j3, mask=0x07):
         self.moveToNB(j1, j2, j3, mask)
