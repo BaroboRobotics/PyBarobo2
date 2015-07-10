@@ -183,6 +183,7 @@ class Linkbot (_linkbot.Linkbot):
         :rtype: float (degrees/second)
 
         Example::
+
             # Get the joint speed for joint 1
             speed = robot.getJointSpeed(1)
         """
@@ -217,12 +218,28 @@ class Linkbot (_linkbot.Linkbot):
         '''
         _linkbot.Linkbot.setBuzzerFrequency(self, float(freq))
 
+    def setJointAcceleration(self, joint, alpha):
+        ''' Set a single joint's acceleration value.
+
+        See :func:`Linkbot.setJointAccelerations` and 
+        :func:`Linkbot.moveSmooth` .
+        '''
+        self.setJointAccelerations(alpha, alpha, alpha, 1<<(joint-1))
+
     def setJointAccelerations(self, alpha1, alpha2, alpha3, mask=0x07):
         '''
         Set the rate at which joints should accelerate during "smoothed"
         motions, such as "moveSmooth". Units are in deg/sec/sec.
         '''
         _linkbot.Linkbot.setJointAccelI(self, mask, alpha1, alpha2, alpha3)
+
+    def setJointDeceleration(self, joint, alpha):
+        ''' Set a single joint's deceleration value.
+
+        See :func:`Linkbot.setJointDecelerations` and 
+        :func:`Linkbot.moveSmooth` .
+        '''
+        self.setJointDecelerations(alpha, alpha, alpha, 1<<(joint-1))
 
     def setJointDecelerations(self, alpha1, alpha2, alpha3, mask=0x07):
         '''
@@ -247,6 +264,7 @@ class Linkbot (_linkbot.Linkbot):
         :param speed: The new speed of the joint, in degrees/second.
 
         Example::
+
             # Set the joint speed for joint 3 to 100 degrees per second
             robot.setJointSpeed(3, 100)
         '''
@@ -348,6 +366,7 @@ class Linkbot (_linkbot.Linkbot):
         :param angle: An absolute angle in degrees to move the joint. 
 
         Example::
+
             robot.driveJointTo(1, 20)
             # Joint 1 is now at the 20 degree position.
             # The next line of code will move joint 1 10 degrees in the negative
@@ -394,12 +413,12 @@ class Linkbot (_linkbot.Linkbot):
         to :func:`Linkbot.setJointSpeed` or similar functions.
 
         :type j1: float
-        :param j1: An angle in degrees. The joint moves this amount from
-            wherever the joints are currently positioned.
+        :param j1: An angle in degrees. The joint moves this amount from wherever the joints are currently positioned.
 
         Example::
+
             robot.move(90, 0, -90) # Drives Linkbot-I forward by turning wheels
-                                   # 90 degrees
+                                   # 90 degrees.
         '''
         self.moveNB(j1, j2, j3, mask)
         self.moveWait(mask)
@@ -408,6 +427,7 @@ class Linkbot (_linkbot.Linkbot):
         '''Non-blocking version of :func:`Linkbot.move`
 
         Example::
+
             # The following code makes a Linkbot-I change its LED color to red 
             # and then blue while it is rolling forward.
             robot.moveNB(90, 0, -90)
@@ -515,27 +535,73 @@ class Linkbot (_linkbot.Linkbot):
         assert(jointNo >= 1 and jointNo <=3)
         self.moveWait(1<<(jointNo-1))
 
+    def moveJointSmooth(self, joint, angle):
+        ''' Move a single joint using the "Smooth" motor controller.
+
+        See :func:`Linkbot.moveSmooth` 
+        '''
+        self.moveJointSmoothNB(joint, angle)
+        self.moveWait(1<<(joint-1))
+
+    def moveJointSmoothNB(self, joint, angle):
+        ''' Non-blocking version of :func:`Linkbot.moveJointSmooth` '''
+        self.moveSmoothNB(angle, angle, angle, 1<<(joint-1))
+
     def moveSmooth(self, j1, j2, j3, mask=0x07):
+        ''' Move joints with smooth acceleration and deceleration.
+
+        The acceleration and deceleration can be set with the functions
+        :func:`Linkbot.setJointAccelerations` and 
+        :func:`Linkbot.setJointDecelerations`. The maximum velocity the 
+        joint will travel at during the motion can be set with the
+        :func:`Linkbot.setJointSpeeds` family of functions.
+
+        :type j1: float
+        :param j1: Number of degrees to move joint 1. Similar for j2 and j3.
+
+        Example::
+
+            # Move joint 1 720 degrees, accelerating at 45 deg/sec, traveling at
+            # a maximum speed of 90 deg/sec, and decelerating at 120 deg/sec at
+            # the end of the motion.
+            robot.setJointAccelerations(45, 45, 45)
+            robot.setJointSpeeds(90, 90, 90)
+            robot.setJointDecelerations(120, 120, 120)
+            robot.moveSmooth(720, 0, 0)
+        '''
         self.moveSmoothNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
     def moveSmoothNB(self, j1, j2, j3, mask=0x07):
+        '''Non-blocking version of :func:`Linkbot.moveSmooth` '''
         self._jointStates.set_moving(mask)
         _linkbot.Linkbot.moveSmooth(self, mask, mask, j1, j2, j3)
 
     def moveSmoothTo(self, j1, j2, j3, mask=0x07):
+        ''' Move joints with smooth acceleration and deceleration.
+
+        The acceleration and deceleration can be set with the functions
+        :func:`Linkbot.setJointAccelerations` and 
+        :func:`Linkbot.setJointDecelerations`.
+
+        :type j1: float
+        :param j1: The position to move joint 1 to (in degrees).
+        '''
         self.moveSmoothToNB(j1, j2, j3, mask)
         self.moveWait(mask)
  
     def moveSmoothToNB(self, j1, j2, j3, mask=0x07):
+        ''' Non-blocking version of :func:`moveSmoothTo` '''
         self._jointStates.set_moving(mask)
         _linkbot.Linkbot.moveSmooth(self, mask, 0, j1, j2, j3)
 
     def moveTo(self, j1, j2, j3, mask=0x07):
+        ''' Move a Linkbot's joints to specified degree locations. '''
         self.moveToNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
     def moveToNB(self, j1, j2, j3, mask=0x07):
+        ''' Non-blocking version of :func:`Linkbot.moveTo` '''
         self._jointStates.set_moving(mask)
         _linkbot.Linkbot.moveTo(self, mask, j1, j2, j3)
 
@@ -583,6 +649,12 @@ class Linkbot (_linkbot.Linkbot):
         self._recordAngles[jointNo-1].append(angle)
     
     def recordAnglesBegin(self):
+        ''' Begin recording a Linkbot's joint angles. 
+
+        This function tells the Linkbot to begin recording any changes
+        to its joint angles. The recorded data can be retrieved with the
+        function :func:`Linkbot.recordAnglesEnd` . 
+        '''
         # Get the initial angles
         (timestamp, a1, a2, a3) = _linkbot.Linkbot.getJointAngles(self)
         self._recordTimes = ([timestamp], [timestamp], [timestamp])
@@ -590,6 +662,10 @@ class Linkbot (_linkbot.Linkbot):
         self.enableEncoderEvents(1.0, self._recordAnglesCb)
 
     def recordAnglesEnd(self):
+        ''' Stop recording a Linkbot's joint angles and return the results.
+
+        :rtype: ((times,), [[j1_angles,], [j2_angles,], [j3_angles,]])
+        '''
         self.disableEncoderEvents()
         # Get last angles
         (timestamp, a1, a2, a3) = _linkbot.Linkbot.getJointAngles(self)
