@@ -1,3 +1,14 @@
+2.3.2
+=====
+- Compiled against Linkbot Labs 1.0.3
+- Added functions to control the acceleration/deceleration of Linkbot
+  Motors. See Linkbot.moveSmooth() family of functions. These functions will
+  only work on Linkbot Firmware versions higher than 4.4.4.
+
+2.3.1
+=====
+- Compiled against Linkbot Labs 0.9.1
+
 2.3.0
 =====
 - Updated to Linkbot Labs 0.7.9 library.
