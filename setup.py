@@ -117,7 +117,8 @@ else:
                 'python',
                 'system',
                 'thread']
-            b2_build_args = ['link=static', 'variant=release']
+            b2_build_args = ['link=static', 'variant=release', 'cxxflags=-fPIC',
+                'cflags=-fPIC']
             for m in boost_modules:
                 b2_build_args += ['--with-'+m]
             subprocess.check_call(['./b2'] + b2_build_args)
