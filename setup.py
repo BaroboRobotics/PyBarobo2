@@ -181,7 +181,8 @@ else:
         subprocess.check_call(['make', 'VERBOSE=1'])
         shutil.copy(os.path.join(buildDir, '_linkbot.so'),
             os.path.join(stageDir, 'linkbot', '_linkbot.so'))
-        package_data = {'linkbot': ['_linkbot.so']}
+
+    package_data = {'linkbot': ['_linkbot.so']}
 
 #Go back to our original directory
 os.chdir(projDir)
