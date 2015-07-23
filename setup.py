@@ -9,7 +9,10 @@ import setuptools
 from setuptools import setup, Extension
 import platform
 import sys
-import urllib.request
+if sys.version_info[0] < 3:
+    import urllib as urlrequest
+else:
+    import urllib.request as urlrequest
 
 PyLinkbot_Version = '2.3.2'
 LinkbotLabs_SDK_branch = '2813b6aff779e8cc8b3e4c6f1608d83d7b086da0'
@@ -96,19 +99,21 @@ else:
         # Download Boost
         try:
             print('Downloading and building Boost...')
-            #urllib.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2?r=http%3A%2F%2Fwww.boost.org%2Fusers%2Fhistory%2Fversion_1_57_0.html&ts=1436898692&use_mirror=iweb',
             boostFile = os.path.join(depsDir, 'boost_1_57_0.tar.bz2')
             boostDir = os.path.join(depsDir, 'boost_1_57_0')
             if not os.path.exists(boostFile):
-                urllib.request.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2',
+                urlrequest.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2',
                     boostFile)
             if not os.path.isdir(boostDir):
                 subprocess.check_call(['tar', '-C', depsDir, '-xjf', boostFile])
 
             os.chdir(boostDir)
             if not os.path.exists(os.path.join(boostDir, 'b2')):
-                subprocess.check_call(['sh', 'bootstrap.sh',
-                    '--with-python=python3.4'])
+                if sys.version_info[0] < 3:
+                    subprocess.check_call(['sh', 'bootstrap.sh'])
+                else:
+                    subprocess.check_call(['sh', 'bootstrap.sh',
+                        '--with-python=python3.4'])
             boost_modules = [
                 'date_time', 
                 'filesystem',
@@ -136,7 +141,7 @@ else:
             nanopbFile = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86.tar.gz')
             nanopbDir = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86')
             if not os.path.exists(nanopbFile):
-                urllib.request.urlretrieve('http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz',
+                urlrequest.urlretrieve('http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz',
                     nanopbFile)
             if not os.path.isdir(nanopbDir):
                 subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
