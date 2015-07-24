@@ -15,7 +15,7 @@ else:
     import urllib.request as urlrequest
 
 PyLinkbot_Version = '2.3.3'
-LinkbotLabs_SDK_branch = '2813b6aff779e8cc8b3e4c6f1608d83d7b086da0'
+LinkbotLabs_SDK_branch = '56739cf1e08a34ec3f5401abd92135917c3d61ad'
 
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
