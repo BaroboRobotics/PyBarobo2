@@ -14,8 +14,8 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request as urlrequest
 
-PyLinkbot_Version = '2.3.2'
-LinkbotLabs_SDK_branch = '2813b6aff779e8cc8b3e4c6f1608d83d7b086da0'
+PyLinkbot_Version = '2.3.3'
+LinkbotLabs_SDK_branch = '56739cf1e08a34ec3f5401abd92135917c3d61ad'
 
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
@@ -68,6 +68,82 @@ shutil.copytree(os.path.join(projDir, 'src', 'linkbot'),
 os.chdir(buildDir)
 package_data = {}
 
+def build_boost():
+    # Download Boost
+    try:
+        print('Downloading and building Boost...')
+        boostFile = os.path.join(depsDir, 'boost_1_57_0.tar.bz2')
+        boostDir = os.path.join(depsDir, 'boost_1_57_0')
+        if not os.path.exists(boostFile):
+            urlrequest.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2',
+                boostFile)
+        if not os.path.isdir(boostDir):
+            subprocess.check_call(['tar', '-C', depsDir, '-xjf', boostFile])
+
+        os.chdir(boostDir)
+        if not os.path.exists(os.path.join(boostDir, 'b2')):
+            if sys.version_info[0] < 3:
+                subprocess.check_call(['sh', 'bootstrap.sh'])
+            else:
+                subprocess.check_call(['sh', 'bootstrap.sh',
+                    '--with-python=python3.4'])
+        boost_modules = [
+            'date_time', 
+            'filesystem',
+            'log',
+            'program_options',
+            'python',
+            'system',
+            'thread']
+        b2_build_args = ['link=static', 'variant=release', 'cxxflags=-fPIC',
+            'cflags=-fPIC']
+        for m in boost_modules:
+            b2_build_args += ['--with-'+m]
+        subprocess.check_call(['./b2'] + b2_build_args)
+        os.chdir(buildDir)
+
+        # Set up our environment variables
+        os.environ['BOOST_ROOT'] = boostDir
+    except:
+        print('Could not download boost. Aborting build...')
+        sys.exit(0)
+
+def build_nanopb():
+    # Download nanopb
+    try:
+        print('Downloading nanopb...')
+        nanopbFile = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86.tar.gz')
+        nanopbDir = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86')
+        if not os.path.exists(nanopbFile):
+            urlrequest.urlretrieve('http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz',
+                nanopbFile)
+        if not os.path.isdir(nanopbDir):
+            subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
+
+        # Set up environment variables
+        os.environ['NANOPB_ROOT'] = nanopbDir
+    except:
+        print('Could not download/extract nanopb. Aborting build...')
+        sys.exit(0)
+
+    # Checkout the latest Linkbot Labs sdk
+    try:
+        print('Checking out LinkbotLabs-SDK...')
+        sdkDir = os.path.join(projDir, 'LinkbotLabs-SDK')
+        if not os.path.isdir(sdkDir):
+            subprocess.check_call(['git', 'clone',
+                'https://github.com/BaroboRobotics/LinkbotLabs-SDK.git',
+                sdkDir])
+        os.chdir(sdkDir)
+        subprocess.check_call(['git', 'checkout', LinkbotLabs_SDK_branch])
+        subprocess.check_call(['git', 'submodule', 'update', 
+            '--recursive', '--init'])
+        os.chdir(buildDir)
+    except:
+        print('Could not download/extract LinkbotLabs-SDK. Aborting build...')
+        sys.exit(0)
+
+
 if platform.system() == 'Windows':
     mingw_version='49'
     # Build our C/C++ library into our tempdir staging directory
@@ -96,79 +172,11 @@ else:
             print('Aborting build...')
             sys.exit(0)
 
-        # Download Boost
-        try:
-            print('Downloading and building Boost...')
-            boostFile = os.path.join(depsDir, 'boost_1_57_0.tar.bz2')
-            boostDir = os.path.join(depsDir, 'boost_1_57_0')
-            if not os.path.exists(boostFile):
-                urlrequest.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2',
-                    boostFile)
-            if not os.path.isdir(boostDir):
-                subprocess.check_call(['tar', '-C', depsDir, '-xjf', boostFile])
+        if 'BOOST_ROOT' not in os.environ:
+            build_boost()
 
-            os.chdir(boostDir)
-            if not os.path.exists(os.path.join(boostDir, 'b2')):
-                if sys.version_info[0] < 3:
-                    subprocess.check_call(['sh', 'bootstrap.sh'])
-                else:
-                    subprocess.check_call(['sh', 'bootstrap.sh',
-                        '--with-python=python3.4'])
-            boost_modules = [
-                'date_time', 
-                'filesystem',
-                'log',
-                'program_options',
-                'python',
-                'system',
-                'thread']
-            b2_build_args = ['link=static', 'variant=release', 'cxxflags=-fPIC',
-                'cflags=-fPIC']
-            for m in boost_modules:
-                b2_build_args += ['--with-'+m]
-            subprocess.check_call(['./b2'] + b2_build_args)
-            os.chdir(buildDir)
-
-            # Set up our environment variables
-            os.environ['BOOST_ROOT'] = boostDir
-        except:
-            print('Could not download boost. Aborting build...')
-            sys.exit(0)
-
-        # Download nanopb
-        try:
-            print('Downloading nanopb...')
-            nanopbFile = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86.tar.gz')
-            nanopbDir = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86')
-            if not os.path.exists(nanopbFile):
-                urlrequest.urlretrieve('http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz',
-                    nanopbFile)
-            if not os.path.isdir(nanopbDir):
-                subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
-
-            # Set up environment variables
-            os.environ['NANOPB_ROOT'] = nanopbDir
-        except:
-            print('Could not download/extract nanopb. Aborting build...')
-            sys.exit(0)
-
-        # Checkout the latest Linkbot Labs sdk
-        try:
-            print('Checking out LinkbotLabs-SDK...')
-            sdkDir = os.path.join(projDir, 'LinkbotLabs-SDK')
-            if not os.path.isdir(sdkDir):
-                subprocess.check_call(['git', 'clone',
-                    'https://github.com/BaroboRobotics/LinkbotLabs-SDK.git',
-                    sdkDir])
-            os.chdir(sdkDir)
-            subprocess.check_call(['git', 'checkout', LinkbotLabs_SDK_branch])
-            subprocess.check_call(['git', 'submodule', 'update', 
-                '--recursive', '--init'])
-            os.chdir(buildDir)
-        except:
-            print('Could not download/extract LinkbotLabs-SDK. Aborting build...')
-            sys.exit(0)
-
+        if 'NANOPB_ROOT' not in os.environ:
+            build_nanopb()
 
         # Build our C/C++ library into our tempdir staging directory
         print('Building Linkbot library...')
@@ -191,12 +199,6 @@ else:
 
 #Go back to our original directory
 os.chdir(projDir)
-
-"""
-if os.environ['BOOST_ROOT'] is None:
-    print('Environment variable BOOST_ROOT is not declared. aborting...')
-    sys.exit(0)
-"""
 
 try:
     if 'sdist' in sys.argv:
