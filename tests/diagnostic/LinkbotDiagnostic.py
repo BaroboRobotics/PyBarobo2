@@ -94,8 +94,8 @@ class LinkbotDiagnostic():
 
 buttons = 0x07
 def main():
-  if len(sys.argv) == 3:
-    serialID = sys.argv[2]
+  if len(sys.argv) == 2:
+    serialID = sys.argv[1]
   else:
     serialID = 'LOCL'
 

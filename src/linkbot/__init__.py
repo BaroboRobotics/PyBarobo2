@@ -190,7 +190,7 @@ class Linkbot (_linkbot.Linkbot):
         return self.getJointSpeeds()[jointNo-1]
 
     def getHwVersion(self):
-        mybytes = self.readEeprom(0x420, 3)
+        mybytes = self.readEeprom(0x430, 3)
         return (mybytes[0], mybytes[1], mybytes[2])
 
     def getSerialId(self):
