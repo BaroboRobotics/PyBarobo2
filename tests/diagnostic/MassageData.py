@@ -57,7 +57,9 @@ def compareMotorSpecs(cursor):
         'SELECT * FROM linearity_tests WHERE '
         '(Id IS \'{}\') ORDER BY Date DESC'.format(id))
     row = cur.fetchone()
-    rows.append(cur.fetchone())
+    print("Row: ", row)
+    if row is not None:
+        rows.append(row)
   _, _, lm1fspeeds, lm1fRs, lm1bspeeds, lm1bRs, lm2fspeeds, lm2fRs, lm2bspeeds, lm2bRs = zip(*rows)
 
   for id in linkboti_ids:
@@ -111,9 +113,21 @@ def compareMotorSpecs(cursor):
   print "Mean J3 Backward Rs: {}".format(numpy.mean(lm2bRs))
   print "Std Dev J3 Backward Rs: {}".format(numpy.std(lm2bRs))
 
+  print "Combined"
+  speeds = lm1fspeeds + lm1bspeeds + lm2fspeeds + lm2bspeeds + \
+           im1fspeeds + im1bspeeds + im2fspeeds + im2bspeeds 
+  speeds = map(abs, speeds)
+  print "Mean speeds: {}".format(numpy.mean(speeds))
+  print "Std Dev speeds: {}".format(numpy.std(speeds))
+  Rvalues = lm1fRs + lm1bRs + lm2fRs + lm2bRs + \
+            im1fRs + im1bRs + im2fRs + im2bRs 
+  print "Mean R values: {}".format(numpy.mean(Rvalues))
+  print "Std dev R values: {}".format(numpy.std(Rvalues))
+
   #pylab.hist([list(im1fspeeds) + map(abs, im1bspeeds), list(lm1fspeeds) + map(abs, lm1bspeeds)])
-  pylab.hist([list(im1fspeeds) + map(abs, im1bspeeds), list(im2fspeeds) + map(abs, im2bspeeds)])
+  #pylab.hist([list(im1fspeeds) + map(abs, im1bspeeds), list(im2fspeeds) + map(abs, im2bspeeds)])
   #pylab.plot([numpy.mean(im1fspeeds), numpy.mean(im1bspeeds)])
+  pylab.hist(Rvalues)
   pylab.show()
 
 
