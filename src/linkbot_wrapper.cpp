@@ -345,9 +345,11 @@ class Linkbot : public barobo::Linkbot
 
     void writeEeprom(int addr, boost::python::object buffer) {
         PyObject* py_buffer = buffer.ptr();
+        Py_INCREF(py_buffer);
         /* FIXME: The next line should raise an exception in Python */
         if(!PyObject_CheckBuffer(py_buffer)) return;
         Py_buffer view;
+        Py_INCREF(&view);
         if(PyObject_GetBuffer(py_buffer, &view, 0)) {
             return;
         }
@@ -355,6 +357,8 @@ class Linkbot : public barobo::Linkbot
                      static_cast<const uint8_t*>(view.buf), 
                      static_cast<size_t>(view.len));
         PyBuffer_Release(&view);
+        Py_DECREF(&view);
+        Py_DECREF(py_buffer);
     }
 
     boost::python::list readEeprom(int addr, int size) {

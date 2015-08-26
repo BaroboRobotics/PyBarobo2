@@ -6,6 +6,8 @@ import sys
 from linkbot import Linkbot
 from testlinkbot import TestLinkbot
 import time
+from PyQt4 import QtCore, QtGui
+from dialog import Ui_Dialog
 
 def initialize_tables(cursor):
   try:
@@ -92,8 +94,104 @@ class LinkbotDiagnostic():
                 angle,
                 value))
 
-buttons = 0x07
+class StartQT4(QtGui.QDialog):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.ui = Ui_Dialog()
+        self.ui.setupUi(self)
+        self.setWindowTitle('Linkbot Diagnostics')
+        self.ui.pushButton_start.clicked.connect(self.startTests)
+        self.ui.pushButton_quit.clicked.connect(self.exit)
+
+    def exit(self):
+        sys.exit(0)
+
+    def startTests(self):
+        try:
+            linkbot = TestLinkbot('LOCL')
+            x,y,z = linkbot.getAccelerometer()
+            if abs(x) > 0.1 or \
+               abs(x) > 0.1 or \
+               abs(z-1) > 0.1:
+                QtGui.QMessageBox.warning(self, 
+                    "Accelerometer readings have anomalies!")
+            con = sql.connect('testlog.db')
+            initialize_tables(con.cursor())
+            cur = con.cursor()
+# Check to see if this linkbot is in our database already. Add it if not
+            cur.execute('SELECT * FROM robot_type WHERE Id=\'{}\''.format(linkbot.getSerialId()))
+            rows = cur.fetchall()
+            formFactor = None
+            if linkbot.getFormFactor() == Linkbot.FormFactor.I:
+                formFactor = "Linkbot-I"
+                motor2index = 2
+            elif linkbot.getFormFactor() == Linkbot.FormFactor.L:
+                formFactor = "Linkbot-L"
+                motor2index = 1
+            else:
+                formFactor = "UNKNOWN"
+            print ("Testing LinkBot {}".format(linkbot.getSerialId()))
+            d = LinkbotDiagnostic(linkbot)
+            results = d.runLinearityTest()
+            now = time.strftime('%Y-%m-%d %H:%M:%S')
+            if len(rows) == 0:
+                cur.execute('INSERT INTO robot_type VALUES(\'{}\', \'{}\')'.format(
+                    linkbot.getSerialId(), formFactor))
+            cur.execute("INSERT INTO linearity_tests "
+                "VALUES('{}', '{}', {}, {}, {}, {}, {}, {}, {}, {})".format(
+                    linkbot.getSerialId(),
+                    now,
+                    results[0]['forward_slope'],
+                    results[0]['forward_rvalue'],
+                    results[0]['backward_slope'],
+                    results[0]['backward_rvalue'],
+                    results[motor2index]['forward_slope'],
+                    results[motor2index]['forward_rvalue'],
+                    results[motor2index]['backward_slope'],
+                    results[motor2index]['backward_rvalue']))
+
+            con.commit()
+            con.close()
+            self.ui.m1f.setText(str(results[0]['forward_slope']))
+            self.ui.m1fl.setText(str(results[0]['forward_rvalue']))
+            self.ui.m1b.setText(str(results[0]['backward_slope']))
+            self.ui.m1bl.setText(str(results[0]['backward_rvalue']))
+
+            self.ui.m2f.setText(str(results[motor2index]['forward_slope']))
+            self.ui.m2fl.setText(str(results[motor2index]['forward_rvalue']))
+            self.ui.m2b.setText(str(results[motor2index]['backward_slope']))
+            self.ui.m2bl.setText(str(results[motor2index]['backward_rvalue']))
+            speeds = [ 
+                        results[0]['forward_slope'],
+                        results[0]['backward_slope'],
+                        results[motor2index]['forward_slope'],
+                        results[motor2index]['backward_slope'],
+                     ]
+            linearities = [
+                results[0]['forward_rvalue'],
+                results[0]['backward_rvalue'],
+                results[motor2index]['forward_rvalue'],
+                results[motor2index]['backward_rvalue'],
+                          ]
+            if any(abs(x) < 210 for x in speeds):
+                self.ui.lineEdit_status.setText('FAIL')
+            elif any(x < 0.99 for x in linearities):
+                self.ui.lineEdit_status.setText('FAIL')
+            else:
+                self.ui.lineEdit_status.setText('Pass')
+
+        except Exception as e:
+            QtGui.QMessageBox.warning(self, 
+                    "Test Failed: " + str(e))
+
 def main():
+    app = QtGui.QApplication(sys.argv)
+    myapp = StartQT4()
+    myapp.show()
+    sys.exit(app.exec_())
+
+buttons = 0x07
+def oldmain():
   if len(sys.argv) == 2:
     serialID = sys.argv[1]
   else:
