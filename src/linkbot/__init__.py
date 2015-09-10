@@ -24,7 +24,6 @@ class Linkbot (_linkbot.Linkbot):
         
         import linkbot
         myLinkbot = linkbot.Linkbot('ABCD')
-        myLinkbot.connect()
 
     The previous snippet of code creates a new variable called "myLinkbot" which
     is connected to a physical robot with the serial ID "ABCD".
