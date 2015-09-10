@@ -23,17 +23,16 @@ class AccelLinkbot (linkbot.Linkbot):
         
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print ("Usage: {0} <Controller Serial ID> <Car Serial Id>".format(sys.argv[0]))
+    if len(sys.argv) < 2:
+        print ("Usage: {0} <Linkbot Serial ID>".format(sys.argv[0]))
         quit()
     serialID = sys.argv[1]
-    carSerialId = sys.argv[2]
-    controller = AccelLinkbot(serialID)
-    controller.car = linkbot.Linkbot(carSerialId)
-    controller.connect()
-    controller.enableAccelerometerEvents()
+    myLinkbot = AccelLinkbot(serialID)
+    time.sleep(2)
+    myLinkbot.connect()
+    myLinkbot.enable_accelerometer_events()
     input("Now recording accelerometer events. Press 'enter' to finish "
           "recording and plot the data.")
-    controller.disableAccelerometerEvents()
-    controller.plot()
+    myLinkbot.disable_accelerometer_events()
+    myLinkbot.plot()
 

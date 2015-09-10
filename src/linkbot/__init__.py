@@ -26,7 +26,25 @@ class Linkbot (_linkbot.Linkbot):
         myLinkbot = linkbot.Linkbot('ABCD')
 
     The previous snippet of code creates a new variable called "myLinkbot" which
-    is connected to a physical robot with the serial ID "ABCD".
+    is connected to a physical robot with the serial ID "ABCD". Once a Linkbot
+    is connected, you may use member functions to control the robot. For
+    instance, to move motors 1 and 3 90 and -90 degrees, respectively::
+
+        myLinkbot.move(90, 0, -90)
+
+    Note: As of version 2.3.6, all of the method names in the Linkbot class have
+    been modified from the old camelHump style names to PEP8 compliant names.
+    For instance, the function::
+
+        myLinkbot.moveJointToNB(1, 90)
+
+    is now::
+
+        myLinkbot.move_joint_to_nb(1, 90)
+
+    The old function names still work for backwards compatibility, but are not
+    included in the documentation.
+
     '''
 
     class FormFactor:
@@ -850,10 +868,10 @@ class Linkbot (_linkbot.Linkbot):
     def test_cb(self):
         print('Test CB called.')
 
-    def _setSerialId(self, serialId):
+    def _set_serial_id(self, serialId):
         _linkbot.Linkbot._writeEeprom(self, 0x412, serialId.encode())
 
-    def _setHwVersion(self, major, minor, micro):
+    def _set_hw_version(self, major, minor, micro):
         _linkbot.Linkbot._writeEeprom(self, 0x420, bytearray([major, minor, micro]))
 
 class ArduinoLinkbot(Linkbot):
