@@ -29,6 +29,7 @@ class Linkbot (_linkbot.Linkbot):
     The previous snippet of code creates a new variable called "myLinkbot" which
     is connected to a physical robot with the serial ID "ABCD".
     '''
+
     class FormFactor:
         I = 0
         L = 1
@@ -79,6 +80,7 @@ class Linkbot (_linkbot.Linkbot):
               at all.
         :type serialId: str
         """
+        self.__attributes = self.__dict__.keys()
         serialId = serialId.upper()
         _linkbot.Linkbot.__init__(self, serialId)
         self.__serialId = serialId
@@ -89,7 +91,7 @@ class Linkbot (_linkbot.Linkbot):
         self.__buttonCb = None
         atexit.register(self._releaseCallbacks)
 
-        self._formFactor = self.getFormFactor()
+        self._formFactor = _linkbot.Linkbot._getFormFactor(self)
         if self._formFactor == Linkbot.FormFactor.I:
             self._motorMask = 0x05
         elif self._formFactor == Linkbot.FormFactor.L:
@@ -100,8 +102,25 @@ class Linkbot (_linkbot.Linkbot):
             self._motorMask = 0x01
 
         # Set up joint event callback for moveWait
-        self.enableJointEvents()
+        self.enable_joint_events()
 
+    def __getattr__(self, name):
+        # Strategy: First, convert the name to a PEP8 style name and see if it
+        # is an attribute. If it is, return that. If not, try to see if the
+        # original name is an attribute and return that. If not, raise
+        # AttributeError.
+        origname = name
+        # Convert the name to a new PEP8 style name
+        import re
+        if name.endswith('NB'):
+            name = name[:-2] + 'Nb'
+        if name.endswith('CB'):
+            name = name[:-2] + 'Cb'
+        newname = re.sub(r'([A-Z])', lambda x: '_'+x.group(1).lower(), name)
+        if newname == origname:
+            raise AttributeError(origname)
+        # return self.__dict__[newname]
+        return getattr(self, newname)
 
 # Connection
 
@@ -120,38 +139,46 @@ class Linkbot (_linkbot.Linkbot):
         pass
 
 # Getters
-    def getAccelerometer(self):
+    def get_accelerometer(self):
         '''Get the current accelerometer values for 3 primary axes
 
         :rtype: (number, number, number)
           Returned values are expressed in "G's", where one G is equivalent
           to one earth-gravity, or 9.81 m/s/s.
         '''
-        return _linkbot.Linkbot.getAccelerometer(self)[1:]
+        return _linkbot.Linkbot._getAccelerometer(self)[1:]
 
-    def getAccelerometerData(self):
+    def get_accelerometer_data(self):
         return self.getAccelerometer()
 
-    def getBatteryVoltage(self):
-        return _linkbot.Linkbot.getBatteryVoltage(self)
+    def get_battery_voltage(self):
+        ''' Get the robot's current battery voltage '''
+        return _linkbot.Linkbot._getBatteryVoltage(self)
 
-    def getJointAngle(self, jointNo):
+    def get_form_factor(self):
+        ''' Get the robot's form factor
+
+        :rtype: linkbot.Linkbot.FormFactor.[I|L|T]
+        '''
+        return self._getFormFactor()
+
+    def get_joint_angle(self, joint):
         '''
         Get the current angle for a particular joint
 
         
-        :type jointNo: int 
-        :param jointNo: The joint number of robot.
+        :type joint: int 
+        :param joint: The joint number of robot.
 
         Example::
 
             # Get the joint angle for joint 1
             angle = robot.getJointAngle(1)
         '''
-        assert(jointNo >= 1 and jointNo <= 3)
-        return self.getJointAngles()[jointNo-1]
+        assert(joint >= 1 and joint <= 3)
+        return self.getJointAngles()[joint-1]
 
-    def getJointAngles(self):
+    def get_joint_angles(self):
         '''
         Get the current joint angles of the robot.
 
@@ -166,20 +193,20 @@ class Linkbot (_linkbot.Linkbot):
             j1, j2, j3 = robot.getJointAngles()
 
         '''
-        values = _linkbot.Linkbot.getJointAngles(self)
+        values = _linkbot.Linkbot._getJointAngles(self)
         return tuple(values[1:])
 
-    def getJointSafetyThresholds(self):
-        return _linkbot.Linkbot.getJointSafetyThresholds(self)
+    def get_joint_safety_thresholds(self):
+        return _linkbot.Linkbot._getJointSafetyThresholds(self)
 
-    def getJointSafetyAngles(self):
-        return _linkbot.Linkbot.getJointSafetyAngles(self)
+    def get_joint_safety_angles(self):
+        return _linkbot.Linkbot._getJointSafetyAngles(self)
 
-    def getJointSpeed(self, jointNo):
+    def get_joint_speed(self, joint):
         """Get the current speed for a joint
 
-        :param jointNo: A joint number.
-        :type jointNo: int
+        :param joint: A joint number.
+        :type joint: int
         :rtype: float (degrees/second)
 
         Example::
@@ -187,28 +214,37 @@ class Linkbot (_linkbot.Linkbot):
             # Get the joint speed for joint 1
             speed = robot.getJointSpeed(1)
         """
-        return self.getJointSpeeds()[jointNo-1]
+        return self.getJointSpeeds()[joint-1]
 
-    def getHwVersion(self):
+    def get_joint_speeds(self):
+        return _linkbot.Linkbot._getJointSpeeds(self)
+
+    def get_joint_states(self):
+        return self._getJointStates()
+
+    def get_hw_version(self):
         mybytes = self.readEeprom(0x430, 3)
         return (mybytes[0], mybytes[1], mybytes[2])
 
-    def getSerialId(self):
-        bytestream = self.readEeprom(0x412, 4)
+    def get_led_color(self):
+        return _linkbot.Linkbot._getLedColor(self)
+
+    def get_serial_id(self):
+        bytestream = self._readEeprom(0x412, 4)
         return bytearray(bytestream).decode()
 # Setters
     def reset(self):
-        _linkbot.Linkbot.resetEncoderRevs(self)
+        _linkbot.Linkbot._resetEncoderRevs(self)
 
-    def resetToZero(self):
-        _linkbot.Linkbot.resetEncoderRevs(self)
+    def reset_to_zero(self):
+        _linkbot.Linkbot._resetEncoderRevs(self)
         self.moveTo(0, 0, 0)
 
-    def resetToZeroNB(self):
-        _linkbot.Linkbot.resetEncoderRevs(self)
+    def reset_to_zero_nb(self):
+        _linkbot.Linkbot._resetEncoderRevs(self)
         self.moveToNB(0, 0, 0)
 
-    def setBuzzerFrequency(self, freq):
+    def set_buzzer_frequency(self, freq):
         '''
         Set the Linkbot's buzzer frequency. Setting the frequency to zero turns
         off the buzzer.
@@ -216,9 +252,9 @@ class Linkbot (_linkbot.Linkbot):
         :type freq: int
         :param freq: The frequency to set the buzzer, in Hertz.
         '''
-        _linkbot.Linkbot.setBuzzerFrequency(self, float(freq))
+        _linkbot.Linkbot._setBuzzerFrequency(self, float(freq))
 
-    def setJointAcceleration(self, joint, alpha):
+    def set_joint_acceleration(self, joint, alpha):
         ''' Set a single joint's acceleration value.
 
         See :func:`Linkbot.setJointAccelerations` and 
@@ -226,14 +262,14 @@ class Linkbot (_linkbot.Linkbot):
         '''
         self.setJointAccelerations(alpha, alpha, alpha, 1<<(joint-1))
 
-    def setJointAccelerations(self, alpha1, alpha2, alpha3, mask=0x07):
+    def set_joint_accelerations(self, alpha1, alpha2, alpha3, mask=0x07):
         '''
         Set the rate at which joints should accelerate during "smoothed"
         motions, such as "moveSmooth". Units are in deg/sec/sec.
         '''
-        _linkbot.Linkbot.setJointAccelI(self, mask, alpha1, alpha2, alpha3)
+        _linkbot.Linkbot._setJointAccelI(self, mask, alpha1, alpha2, alpha3)
 
-    def setJointDeceleration(self, joint, alpha):
+    def set_joint_deceleration(self, joint, alpha):
         ''' Set a single joint's deceleration value.
 
         See :func:`Linkbot.setJointDecelerations` and 
@@ -241,24 +277,24 @@ class Linkbot (_linkbot.Linkbot):
         '''
         self.setJointDecelerations(alpha, alpha, alpha, 1<<(joint-1))
 
-    def setJointDecelerations(self, alpha1, alpha2, alpha3, mask=0x07):
+    def set_joint_decelerations(self, alpha1, alpha2, alpha3, mask=0x07):
         '''
         Set the rate at which joints should decelerate during "smoothed"
         motions, such as "moveSmooth". Units are in deg/sec/sec.
         '''
-        _linkbot.Linkbot.setJointAccelF(self, mask, alpha1, alpha2, alpha3)
+        _linkbot.Linkbot._setJointAccelF(self, mask, alpha1, alpha2, alpha3)
 
-    def setJointSafetyThresholds(self, t1 = 100, t2 = 100, t3 = 100, mask=0x07):
-        _linkbot.Linkbot.setJointSafetyThresholds(self, mask, t1, t2, t3)
+    def set_joint_safety_thresholds(self, t1 = 100, t2 = 100, t3 = 100, mask=0x07):
+        _linkbot.Linkbot._setJointSafetyThresholds(self, mask, t1, t2, t3)
 
-    def setJointSafetyAngles(self, t1 = 10.0, t2 = 10.0, t3 = 10.0, mask=0x07):
-        _linkbot.Linkbot.setJointSafetyThresholds(self, mask, t1, t2, t3)
+    def set_joint_safety_angles(self, t1 = 10.0, t2 = 10.0, t3 = 10.0, mask=0x07):
+        _linkbot.Linkbot._setJointSafetyThresholds(self, mask, t1, t2, t3)
 
-    def setJointSpeed(self, jointNo, speed):
+    def set_joint_speed(self, joint, speed):
         '''
         Set the speed for a single joint on the robot.
 
-        :type jointNo: int
+        :type joint: int
         :param JointNo: The joint to set the speed. Should be 1, 2, or 3.
         :type speed: float
         :param speed: The new speed of the joint, in degrees/second.
@@ -268,9 +304,9 @@ class Linkbot (_linkbot.Linkbot):
             # Set the joint speed for joint 3 to 100 degrees per second
             robot.setJointSpeed(3, 100)
         '''
-        self.setJointSpeeds(speed, speed, speed, mask=(1<<(jointNo-1)) )
+        self.setJointSpeeds(speed, speed, speed, mask=(1<<(joint-1)) )
 
-    def setJointSpeeds(self, s1, s2, s3, mask=0x07):
+    def set_joint_speeds(self, s1, s2, s3, mask=0x07):
         """Set the joint speeds for all of the joints on a robot.
 
         :type s1: float
@@ -279,25 +315,34 @@ class Linkbot (_linkbot.Linkbot):
         :type mask: int 
         :param mask: (optional) A bitmask to specify which joints to modify the
            speed. The speed on the robot's joint is only changed if
-           (mask&(1<<(jointNo-1))).
+           (mask&(1<<(joint-1))).
         """
-        _linkbot.Linkbot.setJointSpeeds(self, mask, s1, s2, s3)
+        _linkbot.Linkbot._setJointSpeeds(self, mask, s1, s2, s3)
+
+    def set_led_color(self, r, g, b):
+        ''' Set the LED color on the robot.
+
+        :type r: int [0,255]
+        :type g: int [0,255]
+        :type b: int [0,255]
+        '''
+        self._setLedColor(r, g, b)
    
-    def setMotorPower(self, jointNo, power):
+    def set_motor_power(self, joint, power):
         """Apply a direct power setting to a motor
         
-        :type jointNo: int (1,3)
-        :param jointNo: The joint to apply the power to
+        :type joint: int (1,3)
+        :param joint: The joint to apply the power to
         :type power: int (-255,255)
         :param power: The power to apply to the motor. 0 indicates no power
         (full stop), negative number apply power to turn the motor in the
         negative direction.
         """
-        assert (jointNo >= 1 and jointNo <= 3)
-        mask = 1<<(jointNo-1)
-        _linkbot.Linkbot.motorPower(self, mask, power, power, power)
+        assert (joint >= 1 and joint <= 3)
+        mask = 1<<(joint-1)
+        _linkbot.Linkbot._motorPower(self, mask, power, power, power)
 
-    def setMotorPowers(self, power1, power2, power3):
+    def set_motor_powers(self, power1, power2, power3):
         """Apply a direct power setting to all motors
         
         :type power: int (-255,255)
@@ -305,7 +350,7 @@ class Linkbot (_linkbot.Linkbot):
         (full stop), negative number apply power to turn the motor in the
         negative direction.
         """
-        _linkbot.Linkbot.motorPower(self, 0x07, power1, power2, power3)
+        _linkbot.Linkbot._motorPower(self, 0x07, power1, power2, power3)
 
 # Movement
     def drive(self, j1, j2, j3, mask=0x07):
@@ -322,46 +367,46 @@ class Linkbot (_linkbot.Linkbot):
               Parameters j2 and j3 are similar for joints 2 and 3.
         :type mask: int
         :param mask: (optional) A bitmask to specify which joints to move. 
-              The robot will only move joints where (mask&(1<<(jointNo-1))) is
+              The robot will only move joints where (mask&(1<<(joint-1))) is
               true.
         """
           
         self.driveNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
-    def driveNB(self, j1, j2, j3, mask=0x07):
+    def drive_nb(self, j1, j2, j3, mask=0x07):
         """Non blocking version of :func:`Linkbot.drive`."""
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.drive(self, mask, j1, j2, j3)
+        _linkbot.Linkbot._drive(self, mask, j1, j2, j3)
 
-    def driveJoint(self, jointNo, angle):
+    def drive_joint(self, joint, angle):
         """Move a single motor using the on-board PID controller.
 
         This is the fastest way to drive a single joint to a desired position.
         The "speed" setting of the joint is ignored during the motion. See also:
         :func:`Linkbot.drive`
 
-        :type jointNo: int
-        :param jointNo: The joint to move.
+        :type joint: int
+        :param joint: The joint to move.
         :type angle: float
         :param angle: A relative angle in degrees to move the joint.
         """
-        self.driveJointNB(jointNo, angle)
-        self.moveWait(1<<(jointNo-1))
+        self.driveJointNB(joint, angle)
+        self.moveWait(1<<(joint-1))
 
-    def driveJointNB(self, jointNo, angle):
+    def drive_joint_nb(self, joint, angle):
         """Non-blocking version of :func:`Linkbot.driveJoint`"""
-        self.driveNB(angle, angle, angle, 1<<(jointNo-1))
+        self.driveNB(angle, angle, angle, 1<<(joint-1))
 
-    def driveJointTo(self, jointNo, angle):
+    def drive_joint_to(self, joint, angle):
         """Move a single motor using the on-board PID controller.
 
         This is the fastest way to drive a single joint to a desired position.
         The "speed" setting of the joint is ignored during the motion. See also:
         :func:`Linkbot.drive`
 
-        :type jointNo: int
-        :param jointNo: The joint to move.
+        :type joint: int
+        :param joint: The joint to move.
         :type angle: float
         :param angle: An absolute angle in degrees to move the joint. 
 
@@ -373,14 +418,14 @@ class Linkbot (_linkbot.Linkbot):
             # direction.
             robot.driveJointTo(1, 10)
         """
-        self.driveJointToNB(jointNo, angle)
-        self.moveWait(1<<(jointNo))
+        self.driveJointToNB(joint, angle)
+        self.moveWait(1<<(joint))
 
-    def driveJointToNB(self, jointNo, angle):
+    def drive_joint_to_nb(self, joint, angle):
         """Non-blocking version of :func:`Linkbot.driveJointTo`"""
-        self.driveToNB(angle, angle, angle, 1<<(jointNo-1))
+        self.driveToNB(angle, angle, angle, 1<<(joint-1))
 
-    def driveTo(self, j1, j2, j3, mask=0x07):
+    def drive_to(self, j1, j2, j3, mask=0x07):
         """Move a robot's motors using the on-board PID controller. 
 
         This is the fastest way to get a Linkbot's motor to a particular angle
@@ -395,16 +440,16 @@ class Linkbot (_linkbot.Linkbot):
               Parameters j2 and j3 are similar for joints 2 and 3.
         :type mask: int
         :param mask: (optional) A bitmask to specify which joints to move. 
-              The robot will only move joints where (mask&(1<<(jointNo-1))) is
+              The robot will only move joints where (mask&(1<<(joint-1))) is
               true.
         """
         self.driveToNB(j1, j2, j3, mask)
         self.moveWait(mask)
         
-    def driveToNB(self, j1, j2, j3, mask=0x07):
+    def drive_to_nb(self, j1, j2, j3, mask=0x07):
         """Non-blocking version of :func:`Linkbot.driveTo`"""
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.driveTo(self, mask, j1, j2, j3)
+        _linkbot.Linkbot._driveTo(self, mask, j1, j2, j3)
 
     def move(self, j1, j2, j3, mask=0x07):
         '''Move the joints on a robot and wait until all movements are finished.
@@ -423,7 +468,7 @@ class Linkbot (_linkbot.Linkbot):
         self.moveNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
-    def moveNB(self, j1, j2, j3, mask=0x07):
+    def move_nb(self, j1, j2, j3, mask=0x07):
         '''Non-blocking version of :func:`Linkbot.move`
 
         Example::
@@ -437,9 +482,9 @@ class Linkbot (_linkbot.Linkbot):
 
         '''
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.move(self, mask, j1, j2, j3)
+        _linkbot.Linkbot._move(self, mask, j1, j2, j3)
 
-    def moveContinuous(self, dir1, dir2, dir3, mask=0x07):
+    def move_continuous(self, dir1, dir2, dir3, mask=0x07):
         '''
         This function makes the joints on a robot begin moving continuously,
         "forever". 
@@ -457,17 +502,17 @@ class Linkbot (_linkbot.Linkbot):
               setJointSpeeds() function.
         '''
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.moveContinuous(self, mask, dir1, dir2, dir3)
+        _linkbot.Linkbot._moveContinuous(self, mask, dir1, dir2, dir3)
 
-    def moveJoint(self, jointNo, angle):
+    def move_joint(self, joint, angle):
         """Move a single motor using the on-board constant velocity controller.
 
         Move a single joint at the velocity last set by
         :func:`Linkbot.setJointSpeed` or other speed setting functions.
         See also: :func:`Linkbot.move`
 
-        :type jointNo: int
-        :param jointNo: The joint to move.
+        :type joint: int
+        :param joint: The joint to move.
         :type angle: float
         :param angle: A relative angle in degrees to move the joint.
 
@@ -478,18 +523,18 @@ class Linkbot (_linkbot.Linkbot):
             robot.moveJoint(1, 90)
             robot.moveJoint(3, 90)
         """
-        assert (jointNo >= 1 and jointNo <= 3)
-        self.moveJointNB(jointNo, angle)
-        self.moveWait(1<<(jointNo-1))
+        assert (joint >= 1 and joint <= 3)
+        self.moveJointNB(joint, angle)
+        self.moveWait(1<<(joint-1))
 
-    def moveJointNB(self, jointNo, angle):
+    def move_joint_nb(self, joint, angle):
         '''Non-blocking version of :func:`Linkbot.moveJoint`
         '''
-        assert (jointNo >= 1 and jointNo <= 3)
-        mask = 1<<(jointNo-1)
+        assert (joint >= 1 and joint <= 3)
+        mask = 1<<(joint-1)
         self.moveNB(angle, angle, angle, mask)
 
-    def moveJointTo(self, jointNo, angle):
+    def move_joint_to(self, joint, angle):
         """Move a single motor using the on-board constant velocity controller.
 
         Move a single joint at the velocity last set by
@@ -498,8 +543,8 @@ class Linkbot (_linkbot.Linkbot):
         to.
         See also: :func:`Linkbot.move`
 
-        :type jointNo: int
-        :param jointNo: The joint to move.
+        :type joint: int
+        :param joint: The joint to move.
         :type angle: float
         :param angle: A relative angle in degrees to move the joint.
 
@@ -511,31 +556,31 @@ class Linkbot (_linkbot.Linkbot):
             robot.moveJointTo(1, 90)
             robot.moveJointTo(3, 90)
         """
-        assert (jointNo >= 1 and jointNo <= 3)
-        self.moveJointToNB(jointNo, angle)
-        self.moveWait(1<<(jointNo-1))
+        assert (joint >= 1 and joint <= 3)
+        self.moveJointToNB(joint, angle)
+        self.moveWait(1<<(joint-1))
 
-    def moveJointToNB(self, jointNo, angle):
+    def move_joint_to_nb(self, joint, angle):
         '''Non-blocking version of :func:`Linkbot.moveJointTo`
         '''
-        assert (jointNo >= 1 and jointNo <= 3)
-        mask = 1<<(jointNo-1)
+        assert (joint >= 1 and joint <= 3)
+        mask = 1<<(joint-1)
         self.moveToNB(angle, angle, angle, mask)
 
-    def moveJointWait(self, jointNo):
+    def move_joint_wait(self, joint):
         ''' Wait for a single joint to stop moving.
 
         This function blocks until the joint specified by the parameter
-        ``jointNo`` stops moving.
+        ``joint`` stops moving.
 
-        :type jointNo: int
-        :param jointNo: The joint to wait for.
+        :type joint: int
+        :param joint: The joint to wait for.
 
         '''
-        assert(jointNo >= 1 and jointNo <=3)
-        self.moveWait(1<<(jointNo-1))
+        assert(joint >= 1 and joint <=3)
+        self.moveWait(1<<(joint-1))
 
-    def moveJointSmooth(self, joint, angle):
+    def move_joint_smooth(self, joint, angle):
         ''' Move a single joint using the "Smooth" motor controller.
 
         See :func:`Linkbot.moveSmooth` 
@@ -543,11 +588,11 @@ class Linkbot (_linkbot.Linkbot):
         self.moveJointSmoothNB(joint, angle)
         self.moveWait(1<<(joint-1))
 
-    def moveJointSmoothNB(self, joint, angle):
+    def move_joint_smooth_nb(self, joint, angle):
         ''' Non-blocking version of :func:`Linkbot.moveJointSmooth` '''
         self.moveSmoothNB(angle, angle, angle, 1<<(joint-1))
 
-    def moveSmooth(self, j1, j2, j3, mask=0x07):
+    def move_smooth(self, j1, j2, j3, mask=0x07):
         ''' Move joints with smooth acceleration and deceleration.
 
         The acceleration and deceleration can be set with the functions
@@ -572,12 +617,12 @@ class Linkbot (_linkbot.Linkbot):
         self.moveSmoothNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
-    def moveSmoothNB(self, j1, j2, j3, mask=0x07):
+    def move_smooth_nb(self, j1, j2, j3, mask=0x07):
         '''Non-blocking version of :func:`Linkbot.moveSmooth` '''
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.moveSmooth(self, mask, mask, j1, j2, j3)
+        _linkbot.Linkbot._moveSmooth(self, mask, mask, j1, j2, j3)
 
-    def moveSmoothTo(self, j1, j2, j3, mask=0x07):
+    def move_smooth_to(self, j1, j2, j3, mask=0x07):
         ''' Move joints with smooth acceleration and deceleration.
 
         The acceleration and deceleration can be set with the functions
@@ -590,22 +635,22 @@ class Linkbot (_linkbot.Linkbot):
         self.moveSmoothToNB(j1, j2, j3, mask)
         self.moveWait(mask)
  
-    def moveSmoothToNB(self, j1, j2, j3, mask=0x07):
+    def move_smooth_to_nb(self, j1, j2, j3, mask=0x07):
         ''' Non-blocking version of :func:`moveSmoothTo` '''
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.moveSmooth(self, mask, 0, j1, j2, j3)
+        _linkbot.Linkbot._moveSmooth(self, mask, 0, j1, j2, j3)
 
-    def moveTo(self, j1, j2, j3, mask=0x07):
+    def move_to(self, j1, j2, j3, mask=0x07):
         ''' Move a Linkbot's joints to specified degree locations. '''
         self.moveToNB(j1, j2, j3, mask)
         self.moveWait(mask)
 
-    def moveToNB(self, j1, j2, j3, mask=0x07):
+    def move_to_nb(self, j1, j2, j3, mask=0x07):
         ''' Non-blocking version of :func:`Linkbot.moveTo` '''
         self._jointStates.set_moving(mask)
-        _linkbot.Linkbot.moveTo(self, mask, j1, j2, j3)
+        _linkbot.Linkbot._moveTo(self, mask, j1, j2, j3)
 
-    def moveWait(self, mask=0x07):
+    def move_wait(self, mask=0x07):
         ''' Wait for all masked joints (all joints by default) to stop moving.
         '''
         mask &= self._motorMask
@@ -632,23 +677,23 @@ class Linkbot (_linkbot.Linkbot):
                     self._jointStates.set_state(i, s)
         self._jointStates.unlock()
 
-    def stopJoint(self, jointNo):
+    def stop_joint(self, joint):
         '''
         Stop a single joint on the robot, immediately making the joint coast.
         '''
-        self.stop(1<<(jointNo-1))
+        self.stop(1<<(joint-1))
 
     def stop(self, mask=0x07):
         '''Immediately stop and relax all joints on the Linkbot.'''
-        _linkbot.Linkbot.stop(self, mask)
+        _linkbot.Linkbot._stop(self, mask)
 
     # MISC
 
-    def _recordAnglesCb(self, jointNo, angle, timestamp):
-        self._recordTimes[jointNo-1].append(timestamp)
-        self._recordAngles[jointNo-1].append(angle)
+    def _recordAnglesCb(self, joint, angle, timestamp):
+        self._recordTimes[joint-1].append(timestamp)
+        self._recordAngles[joint-1].append(angle)
     
-    def recordAnglesBegin(self):
+    def record_angles_begin(self):
         ''' Begin recording a Linkbot's joint angles. 
 
         This function tells the Linkbot to begin recording any changes
@@ -656,19 +701,19 @@ class Linkbot (_linkbot.Linkbot):
         function :func:`Linkbot.recordAnglesEnd` . 
         '''
         # Get the initial angles
-        (timestamp, a1, a2, a3) = _linkbot.Linkbot.getJointAngles(self)
+        (timestamp, a1, a2, a3) = _linkbot.Linkbot._getJointAngles(self)
         self._recordTimes = ([timestamp], [timestamp], [timestamp])
         self._recordAngles = ([a1], [a2], [a3])
         self.enableEncoderEvents(1.0, self._recordAnglesCb)
 
-    def recordAnglesEnd(self):
+    def record_angles_end(self):
         ''' Stop recording a Linkbot's joint angles and return the results.
 
         :rtype: ((times,), [[j1_angles,], [j2_angles,], [j3_angles,]])
         '''
         self.disableEncoderEvents()
         # Get last angles
-        (timestamp, a1, a2, a3) = _linkbot.Linkbot.getJointAngles(self)
+        (timestamp, a1, a2, a3) = _linkbot.Linkbot._getJointAngles(self)
         for i, _ in enumerate(self._recordTimes):
             self._recordTimes[i].append(timestamp)
         self._recordAngles[0].append(a1)
@@ -688,25 +733,25 @@ class Linkbot (_linkbot.Linkbot):
 
     # CALLBACKS
 
-    def disableAccelerometerEvents(self):
+    def disable_accelerometer_events(self):
         '''
         Make the robot stop reporting accelerometer change events.
         '''
-        self.setAccelerometerEventCallback(None)
+        self._setAccelerometerEventCallback(None)
 
-    def disableButtonEvents(self):
+    def disable_button_events(self):
         '''
         Make the robot stop reporting button change events.
         '''
-        self.setButtonEventCallback(None)
+        self._setButtonEventCallback(None)
 
-    def disableEncoderEvents(self):
+    def disable_encoder_events(self):
         '''
         Make the robot stop reporting encoder change events.
         '''
-        self.setEncoderEventCallback(None, 20)
+        self._setEncoderEventCallback(None, 20)
 
-    def disableJointEvents(self):
+    def disable_joint_events(self):
         '''
         Make the robot stop reporting joint status change events.
         '''
@@ -716,7 +761,7 @@ class Linkbot (_linkbot.Linkbot):
         # object to None.
         self.__jointCb = None
 
-    def enableAccelerometerEvents(self, cb=None):
+    def enable_accelerometer_events(self, cb=None):
         '''
         Make the robot begin reporting accelerometer change events. To handle
         these events, a callback function may be specified by the "cb"
@@ -729,9 +774,12 @@ class Linkbot (_linkbot.Linkbot):
             should be cb(x, y, z, timestamp)
         '''
         self.__accelCb = cb
-        self.setAccelerometerEventCallback(self.accelerometerEventCB)
+        try:
+            self._setAccelerometerEventCallback(self.accelerometerEventCB)
+        except:
+            self._setAccelerometerEventCallback(self.accelerometer_event_cb)
 
-    def enableEncoderEvents(self, granularity=20.0, cb=None):
+    def enable_encoder_events(self, granularity=20.0, cb=None):
         '''Make the robot begin reporting encoder events.
 
         Make the robot begin reporting joint encoder events. To handle these
@@ -743,14 +791,17 @@ class Linkbot (_linkbot.Linkbot):
             events, in degrees. For example, setting the granularity to "10.0" means
             the robot will report an encoder event for every 10 degrees that a joint
             is rotated.
-        :type cb: function(jointNo, angle, timestamp)
+        :type cb: function(joint, angle, timestamp)
         :param cb: (optional) The callback function to handle the event. The
-            function prototype should be cb(jointNo, angle, timestamp)
+            function prototype should be cb(joint, angle, timestamp)
         '''
         self.__encoderCb = cb
-        self.setEncoderEventCallback(self.encoderEventCB, granularity)
+        try:
+            self._setEncoderEventCallback(self.encoderEventCB, granularity)
+        except:
+            self._setEncoderEventCallback(self.encoder_event_cb, granularity)
 
-    def enableButtonEvents(self, cb=None):
+    def enable_button_events(self, cb=None):
         ''' Make the robot begin button events.
 
         Make the robot begin reporting button events. To handle the events, a
@@ -762,25 +813,28 @@ class Linkbot (_linkbot.Linkbot):
             cb(ButtonNo, buttonState, timestamp)
         '''
         self.__buttonCb = cb
-        self.setButtonEventCallback(self.buttonEventCB)
+        try:
+            self._setButtonEventCallback(self.buttonEventCB)
+        except:
+            self._setButtonEventCallback(self.button_event_cb)
 
-    def enableJointEvents(self, cb=None):
+    def enable_joint_events(self, cb=None):
         self.__jointCb = cb
-        self.setJointEventCallback(self.jointEventCB)
+        self._setJointEventCallback(self.jointEventCB)
 
-    def buttonEventCB(self, buttonNo, state, timestamp):
+    def button_event_cb(self, button_no, state, timestamp):
         if self.__buttonCb is not None:
             self.__buttonCb(buttonNo, state, timestamp)
 
-    def encoderEventCB(self, jointNo, angle, timestamp):
+    def encoder_event_cb(self, joint, angle, timestamp):
         if self.__encoderCb is not None:
-            self.__encoderCb(jointNo, angle, timestamp)
+            self.__encoderCb(joint, angle, timestamp)
 
-    def accelerometerEventCB(self, x, y, z, timestamp):
+    def accelerometer_event_cb(self, x, y, z, timestamp):
         if self.__accelCb is not None:
             self.__accelCb(x, y, z, timestamp)
 
-    def jointEventCB(self, jointNo, state, timestamp):
+    def joint_event_cb(self, joint, state, timestamp):
         ''' Joint event callback function.
 
         This function is called when the state of joint changes. For instance,
@@ -789,19 +843,19 @@ class Linkbot (_linkbot.Linkbot):
         This function is used internally by the moveWait() function and
         overriding this function is not recommended. '''
         self._jointStates.lock()
-        self._jointStates.set_state(jointNo, state)
+        self._jointStates.set_state(joint, state)
         self._jointStates.unlock()
         if self.__jointCb is not None:
-            self.__jointCb(jointNo, state, timestamp)
+            self.__jointCb(joint, state, timestamp)
 
-    def testCB(self):
+    def test_cb(self):
         print('Test CB called.')
 
     def _setSerialId(self, serialId):
-        _linkbot.Linkbot.writeEeprom(self, 0x412, serialId.encode())
+        _linkbot.Linkbot._writeEeprom(self, 0x412, serialId.encode())
 
     def _setHwVersion(self, major, minor, micro):
-        self.writeEeprom(0x420, bytearray([major, minor, micro]))
+        _linkbot.Linkbot._writeEeprom(self, 0x420, bytearray([major, minor, micro]))
 
 class ArduinoLinkbot(Linkbot):
     TWI_ADDR = 0x03
@@ -821,25 +875,25 @@ class ArduinoLinkbot(Linkbot):
         analog_read = 0x06
         analog_write = 0x07
 
-    def analogWrite(self, pin, value):
+    def analog_write(self, pin, value):
         buf = bytearray([self.Command.analog_write, pin, value])
         self.writeTwi(self.TWI_ADDR, buf)
 
-    def analogRead(self, pin):
+    def analog_read(self, pin):
         buf = bytearray([self.Command.analog_read, pin])
         data = self.writeReadTwi(self.TWI_ADDR, buf, 2)
         value = (data[0]<<8) + data[1]
         return value
 
-    def digitalWrite(self, pin, value):
+    def digital_write(self, pin, value):
         buf = bytearray([self.Command.digital_write, pin, value])
         self.writeTwi(self.TWI_ADDR, buf)
     
-    def digitalRead(self, pin):
+    def digital_read(self, pin):
         buf = bytearray([self.Command.digital_read, pin])
         return self.writeReadTwi(self.TWI_ADDR, buf, 1)[0]
 
-    def pinMode(self, pin, mode):
+    def pin_mode(self, pin, mode):
         buf = bytearray([self.Command.pin_mode, pin, mode])
         self.writeTwi(self.TWI_ADDR, buf)
 

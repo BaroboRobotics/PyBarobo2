@@ -513,12 +513,12 @@ BOOST_PYTHON_MODULE(_linkbot)
         .value("moving", barobo::JointState::MOVING)
         .value("failure", barobo::JointState::FAILURE);
     #define LINKBOT_FUNCTION(func, docstring) \
-    .def(#func, &Linkbot::func, docstring)
+    .def("_" #func, &Linkbot::func, docstring)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
         #include"linkbot_functions.x.h"
-        .def("moveWait", &Linkbot::moveWait)
+        .def("_moveWait", &Linkbot::moveWait)
         .def("_releaseCallbacks", &Linkbot::releaseCallbacks)
-        .def("setJointStates", static_cast<void (Linkbot::*)(int, 
+        .def("_setJointStates", static_cast<void (Linkbot::*)(int, 
             barobo::JointState::Type, double,
             barobo::JointState::Type, double,
             barobo::JointState::Type, double)>(&Linkbot::setJointStates))
