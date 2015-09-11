@@ -121,6 +121,10 @@ class Linkbot (_linkbot.Linkbot):
         # Set up joint event callback for moveWait
         self.enable_joint_events()
 
+    # This method allows us to programatically support both mixedCase and
+    # lowercase_with_underscore method names. If an attribute cannot be found,
+    # it is converted to the equivalent lowercase attribute name and checked
+    # again. If it still cannot be found, AttributeError is raised.
     def __getattr__(self, name):
         # Strategy: First, convert the name to a PEP8 style name and see if it
         # is an attribute. If it is, return that. If not, try to see if the

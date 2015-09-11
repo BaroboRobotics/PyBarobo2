@@ -1,3 +1,8 @@
+2.3.6
+=====
+- Added PEP8 compliant member function names. i.e. move_wait() instead of
+  moveWait()
+
 2.3.2
 =====
 - Compiled against Linkbot Labs 1.0.3
