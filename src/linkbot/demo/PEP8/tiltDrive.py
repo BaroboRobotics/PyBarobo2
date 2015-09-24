@@ -31,9 +31,9 @@ if __name__ == "__main__":
     controller = AccelLinkbot(serialID)
     controller.car = linkbot.Linkbot(carSerialId)
     controller.connect()
-    controller.enableAccelerometerEvents()
+    controller.enable_accelerometer_events()
     input("Now recording accelerometer events. Press 'enter' to finish "
           "recording and plot the data.")
-    controller.disableAccelerometerEvents()
+    controller.disable_accelerometer_events()
     controller.plot()
 

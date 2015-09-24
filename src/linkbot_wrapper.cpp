@@ -1,12 +1,4 @@
 
-#include "rpc/asio/tcpclient.hpp"
-#include "baromesh/iocore.hpp"
-#include "baromesh/daemon.hpp"
-
-#include <boost/asio/use_future.hpp>
-
-#include <boost/scope_exit.hpp>
-
 
 #include <iostream>
 #include <cmath>
@@ -16,12 +8,12 @@
 #include <queue>
 #include <condition_variable>
 #include "baromesh/linkbot.hpp"
-#include <boost/python.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/python.hpp>
 
+void cycleDongle(int seconds);
 
 using namespace boost::python;
-using boost::asio::use_future;
 
 struct move_exception : std::exception
 {
@@ -488,21 +480,6 @@ class Linkbot : public barobo::Linkbot
         boost::python::object m_linkbot;
 };
 
-void cycleDongle(int seconds) {
-    auto ioCore = baromesh::IoCore::get();
-    rpc::asio::TcpClient daemon { ioCore->ios(), boost::log::sources::logger() };
-    boost::asio::ip::tcp::resolver resolver { ioCore->ios() };
-    auto daemonQuery = decltype(resolver)::query {
-        baromesh::daemonHostName(), baromesh::daemonServiceName()
-    };
-    auto daemonIter = resolver.resolve(daemonQuery);
-    rpc::asio::asyncInitTcpClient(daemon, daemonIter, use_future).get();
-    rpc::asio::asyncConnect<barobo::Daemon>(daemon, std::chrono::seconds(1), use_future).get();
-    rpc::asio::asyncFire(daemon,
-            rpc::MethodIn<barobo::Daemon>::cycleDongle{2},
-            std::chrono::seconds(1), use_future).get();
-}
-
 BOOST_PYTHON_MODULE(_linkbot)
 {
     register_exception_translator<move_exception>(&translate_exception);
@@ -513,12 +490,12 @@ BOOST_PYTHON_MODULE(_linkbot)
         .value("moving", barobo::JointState::MOVING)
         .value("failure", barobo::JointState::FAILURE);
     #define LINKBOT_FUNCTION(func, docstring) \
-    .def(#func, &Linkbot::func, docstring)
+    .def("_" #func, &Linkbot::func, docstring)
     class_<Linkbot,boost::noncopyable>("Linkbot", init<const char*>())
         #include"linkbot_functions.x.h"
-        .def("moveWait", &Linkbot::moveWait)
+        .def("_moveWait", &Linkbot::moveWait)
         .def("_releaseCallbacks", &Linkbot::releaseCallbacks)
-        .def("setJointStates", static_cast<void (Linkbot::*)(int, 
+        .def("_setJointStates", static_cast<void (Linkbot::*)(int, 
             barobo::JointState::Type, double,
             barobo::JointState::Type, double,
             barobo::JointState::Type, double)>(&Linkbot::setJointStates))

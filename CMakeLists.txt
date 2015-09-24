@@ -21,6 +21,7 @@ find_package(PythonLibs 3)
 
 set(SOURCES
     src/linkbot_wrapper.cpp
+    src/cycle_dongle.cpp
     )
 
 add_library(_linkbot SHARED ${SOURCES})
