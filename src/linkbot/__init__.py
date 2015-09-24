@@ -244,7 +244,7 @@ class Linkbot (_linkbot.Linkbot):
         return self._getJointStates()
 
     def get_hw_version(self):
-        mybytes = self.readEeprom(0x430, 3)
+        mybytes = self._readEeprom(0x430, 3)
         return (mybytes[0], mybytes[1], mybytes[2])
 
     def get_led_color(self):

@@ -10,6 +10,16 @@
 #include "baromesh/linkbot.hpp"
 #include <boost/filesystem.hpp>
 #include <boost/python.hpp>
+namespace py = boost::python;
+
+template<class T>
+py::list std_vector_to_py_list(const std::vector<T>& v)
+{
+    py::object get_iter = py::iterator<std::vector<T> >();
+    py::object iter = get_iter(v);
+    py::list l(iter);
+    return l;
+}
 
 void cycleDongle(int seconds);
 
@@ -111,6 +121,15 @@ class Linkbot : public barobo::Linkbot
         double v;
         barobo::Linkbot::getBatteryVoltage(v);
         return v;
+    }
+
+    boost::python::list getAdcRaw2() {
+        auto vector = barobo::Linkbot::getAdcRaw();
+        boost::python::list retval;
+        for(auto i: vector) {
+            retval.append(i);
+        }
+        return retval;
     }
 
     int getFormFactor() {

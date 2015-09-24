@@ -11,6 +11,14 @@ add_subdirectory(LinkbotLabs-SDK)
 ##############################################################################
 # Boost
 
+if (DEFINED ENV{PYTHON_LIBRARY})
+    set(PYTHON_LIBRARY $ENV{PYTHON_LIBRARY})
+endif()
+
+if (DEFINED ENV{PYTHON_INCLUDE_DIR})
+    set(PYTHON_INCLUDE_DIR $ENV{PYTHON_INCLUDE_DIR})
+endif()
+
 # Linking statically to Boost is easier for prototyping. For multi-module
 # projects we'll want to use shared libraries and defined -DBOOST_ALL_DYN_LINK
 # or the like.
