@@ -105,7 +105,7 @@ class Linkbot (_linkbot.Linkbot):
         self.__accelCb = None
         self.__encoderCb = None
         self.__jointCb = None
-        self.__buttonCb = None
+        self.__button_cb = None
         atexit.register(self._releaseCallbacks)
 
         self._formFactor = _linkbot.Linkbot._getFormFactor(self)
@@ -833,7 +833,7 @@ class Linkbot (_linkbot.Linkbot):
         :param cb: (optional) A callback function with the prototype
             cb(ButtonNo, buttonState, timestamp)
         '''
-        self.__buttonCb = cb
+        self.__button_cb = cb
         try:
             self._setButtonEventCallback(self.buttonEventCB)
         except:
@@ -843,9 +843,10 @@ class Linkbot (_linkbot.Linkbot):
         self.__jointCb = cb
         self._setJointEventCallback(self.jointEventCB)
 
-    def button_event_cb(self, button_no, state, timestamp):
-        if self.__buttonCb is not None:
-            self.__buttonCb(buttonNo, state, timestamp)
+    #def button_event_cb(self, button_no, state, timestamp):
+    def button_event_cb(self, *args, **kwargs):
+        if self.__button_cb is not None:
+            self.__button_cb(*args, **kwargs)
 
     def encoder_event_cb(self, joint, angle, timestamp):
         if self.__encoderCb is not None:
