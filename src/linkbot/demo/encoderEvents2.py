@@ -13,7 +13,7 @@ class EncoderLinkbot (linkbot.Linkbot):
         self.encoderTimes = []
 
     def encoderEventCB(self, jointNo, angle, timestamp):
-        if jointNo == 3:
+        if jointNo == 1:
             print(jointNo, angle)
             self.encoderData.append(angle)
             self.encoderTimes.append(timestamp)

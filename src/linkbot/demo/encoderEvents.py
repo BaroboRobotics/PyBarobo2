@@ -34,14 +34,8 @@ if __name__ == "__main__":
     myLinkbot = EncoderLinkbot(serialID)
     myLinkbot.connect()
     myLinkbot.enableEncoderEvents(granularity=1.0)
-    #myLinkbot.drive(90, 90, 90)
-    #myLinkbot.drive(-90, -90, -90)
-    #myLinkbot.disableEncoderEvents()
-    #myLinkbot.plot()
-    while True:
-        key = input('Enter a motor power or "q" to quit:')
-        if key == 'q':
-            break
-        power = int(key)
-        myLinkbot.setMotorPowers(power, power, power)
+    myLinkbot.drive(90, 90, 90)
+    myLinkbot.drive(-90, -90, -90)
+    myLinkbot.disableEncoderEvents()
+    myLinkbot.plot()
 

@@ -15,7 +15,7 @@ if __name__ == "__main__":
     myLinkbot.setJointAccelerations(45, 45, 45)
     myLinkbot.setJointDecelerations(45, 45, 45)
     angle = 360
-    for i in range(20):
+    for i in range(2):
         print(i)
         for _ in range(7):
             print(angle)
