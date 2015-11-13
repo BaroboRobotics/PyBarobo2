@@ -125,6 +125,7 @@ class Linkbot : public barobo::Linkbot
         return v;
     }
 
+    /*
     boost::python::list getAdcRaw2() {
         auto vector = barobo::Linkbot::getAdcRaw();
         boost::python::list retval;
@@ -133,6 +134,7 @@ class Linkbot : public barobo::Linkbot
         }
         return retval;
     }
+    */
 
     int getFormFactor() {
         barobo::FormFactor::Type form;

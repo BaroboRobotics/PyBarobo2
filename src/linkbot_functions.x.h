@@ -20,8 +20,8 @@ LINKBOT_FUNCTION(moveAccel, "Accelerate the joints at a specified rate.")
 
 // GETTERS
 LINKBOT_FUNCTION(getAccelerometer, "stub")
-LINKBOT_FUNCTION(getAdcRaw, "stub")
-LINKBOT_FUNCTION(getAdcRaw2, "stub")
+//LINKBOT_FUNCTION(getAdcRaw, "stub")
+//LINKBOT_FUNCTION(getAdcRaw2, "stub")
 LINKBOT_FUNCTION(getBatteryVoltage, "stub")
 LINKBOT_FUNCTION(getFormFactor, "stub")
 LINKBOT_FUNCTION(getJointAngles, "stub")
