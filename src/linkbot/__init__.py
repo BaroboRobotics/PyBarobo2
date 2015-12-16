@@ -14,6 +14,7 @@ import threading
 import multiprocessing
 import functools
 import atexit
+import math
 
 class Linkbot (_linkbot.Linkbot):
     '''
@@ -281,7 +282,7 @@ class Linkbot (_linkbot.Linkbot):
         See :func:`Linkbot.set_joint_accelerations` and 
         :func:`Linkbot.move_smooth` .
         '''
-        self.setJointAccelerations(alpha, alpha, alpha, 1<<(joint-1))
+        self.set_joint_accelerations(alpha, alpha, alpha, 1<<(joint-1))
 
     def set_joint_accelerations(self, alpha1, alpha2, alpha3, mask=0x07):
         '''
@@ -504,6 +505,18 @@ class Linkbot (_linkbot.Linkbot):
         '''
         self._jointStates.set_moving(mask)
         _linkbot.Linkbot._move(self, mask, j1, j2, j3)
+
+    def move_joint_accel(self, joint, acceleration, angle):
+        self.move_joint_accel_nb(joint, acceleration, angle)
+        self.move_wait(mask=1<<(joint-1))
+
+    def move_joint_accel_nb(self, joint, acceleration, angle):
+        self.set_joint_acceleration(joint, acceleration)
+        timeout = math.sqrt(2*angle/acceleration)
+        self._moveAccel((1<<(joint-1)), 
+                0, timeout, Linkbot.JointStates.HOLD,
+                0, timeout, Linkbot.JointStates.HOLD,
+                0, timeout, Linkbot.JointStates.HOLD)
 
     def move_continuous(self, dir1, dir2, dir3, mask=0x07):
         '''
