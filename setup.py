@@ -14,7 +14,7 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request as urlrequest
 
-PyLinkbot_Version = '2.3.6'
+PyLinkbot_Version = '2.3.7'
 LinkbotLabs_SDK_branch = 'd2594ce2822e1e3bf7a125a0bc3d9240e97f1ec6'
 
 projDir = os.getcwd()
