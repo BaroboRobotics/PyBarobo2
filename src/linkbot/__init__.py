@@ -254,6 +254,9 @@ class Linkbot (_linkbot.Linkbot):
     def get_serial_id(self):
         bytestream = self._readEeprom(0x412, 4)
         return bytearray(bytestream).decode()
+
+    def get_versions(self):
+        return _linkbot.Linkbot._getVersions(self)
 # Setters
     def reset(self):
         _linkbot.Linkbot._resetEncoderRevs(self)
@@ -847,9 +850,9 @@ class Linkbot (_linkbot.Linkbot):
             cb(ButtonNo, buttonState, timestamp)
         '''
         self.__button_cb = cb
-        try:
+        if hasattr(self, "buttonEventCB"):
             self._setButtonEventCallback(self.buttonEventCB)
-        except:
+        else:
             self._setButtonEventCallback(self.button_event_cb)
 
     def enable_joint_events(self, cb=None):

@@ -4,13 +4,12 @@ import linkbot
 import math
 import time
 import random
+import sys
 
-'''
-linkbotIds = [ '4NKJ', 'X3XH', '5J66', '4LB8',
-               'CJTX', 'WVF2', '6SSJ', 'DWRJ',
-               'NJ3Q', 'FJ6C' ,'XQKJ', '2XWX']
-'''
-linkbotIds = ['locl']
+if len(sys.argv) < 2:
+    print ("Usage: {0} <Linkbot Serial IDs>".format(sys.argv[0]))
+    quit()
+linkbotIds = sys.argv[1:]
 
 linkbots = list(map(linkbot.Linkbot, linkbotIds))
 
