@@ -9,10 +9,17 @@ import setuptools
 from setuptools import setup, Extension
 import platform
 import sys
+import traceback
 if sys.version_info[0] < 3:
     import urllib as urlrequest
 else:
     import urllib.request as urlrequest
+
+boost_url = 'http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2'
+if platform.system() == 'Linux':
+    nanopb_url = 'http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz'
+elif platform.system() == 'Darwin':
+    nanopb_url = 'http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-macosx-x86.zip'
 
 PyLinkbot_Version = '2.3.7'
 LinkbotLabs_SDK_branch = 'd2594ce2822e1e3bf7a125a0bc3d9240e97f1ec6'
@@ -75,7 +82,8 @@ def build_boost():
         boostFile = os.path.join(depsDir, 'boost_1_57_0.tar.bz2')
         boostDir = os.path.join(depsDir, 'boost_1_57_0')
         if not os.path.exists(boostFile):
-            urlrequest.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2',
+            global boost_url
+            urlrequest.urlretrieve(boost_url,
                 boostFile)
         if not os.path.isdir(boostDir):
             subprocess.check_call(['tar', '-C', depsDir, '-xjf', boostFile])
@@ -112,18 +120,31 @@ def build_nanopb():
     # Download nanopb
     try:
         print('Downloading nanopb...')
-        nanopbFile = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86.tar.gz')
-        nanopbDir = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86')
+        global nanopb_url
+        filename = nanopb_url.split('/')[-1]
+        nanopbFile = os.path.join(depsDir, filename)
+        if nanopbFile.endswith('.tar.gz'):
+            basename = nanopbFile.rsplit('.', 2)[0]
+        elif nanopbFile.endswith('.zip'):
+            basename = nanopbFile.rsplit('.', 1)[0]
+        else:
+            raise RuntimeError('Unknown file extension: ' + nanopbFile)
+        nanopbDir = os.path.join(depsDir, basename)
+        print(nanopbDir)
         if not os.path.exists(nanopbFile):
-            urlrequest.urlretrieve('http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz',
+            urlrequest.urlretrieve(nanopb_url,
                 nanopbFile)
         if not os.path.isdir(nanopbDir):
-            subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
+            if nanopbFile.endswith('.tar.gz'):
+                subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
+            elif nanopbFile.endswith('.zip'):
+                subprocess.check_call(['unzip', '-d', depsDir, nanopbFile])
 
         # Set up environment variables
         os.environ['NANOPB_ROOT'] = nanopbDir
     except:
         print('Could not download/extract nanopb. Aborting build...')
+        print(traceback.format_exc())
         sys.exit(0)
 
     # Checkout the latest Linkbot Labs sdk
@@ -187,6 +208,11 @@ else:
                     '-DCMAKE_CXX_FLAGS=-fPIC', 
                     '-DBUILD_SHARED_LIBS=OFF',
                     '-DCMAKE_BUILD_TYPE=Release']
+            try:
+                subprocess_args += ['-DPYTHON_LIBRARY='+os.environ['PYTHON_LIBRARY']]
+                subprocess_args += ['-DPYTHON_INCLUDE_DIR='+os.environ['PYTHON_INCLUDE_DIR']]
+            except:
+                pass
             if toolchainFile is not None:
                 subprocess_args += ['-DCMAKE_TOOLCHAIN_FILE='+toolchainFile]
             subprocess_args += [projDir]
