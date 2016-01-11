@@ -14,7 +14,7 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request as urlrequest
 
-PyLinkbot_Version = '2.3.6'
+PyLinkbot_Version = '2.3.7'
 LinkbotLabs_SDK_branch = 'd2594ce2822e1e3bf7a125a0bc3d9240e97f1ec6'
 
 projDir = os.getcwd()
@@ -187,6 +187,11 @@ else:
                     '-DCMAKE_CXX_FLAGS=-fPIC', 
                     '-DBUILD_SHARED_LIBS=OFF',
                     '-DCMAKE_BUILD_TYPE=Release']
+            try:
+                subprocess_args += ['-DPYTHON_LIBRARY='+os.environ['PYTHON_LIBRARY']]
+                subprocess_args += ['-DPYTHON_INCLUDE_DIR='+os.environ['PYTHON_INCLUDE_DIR']]
+            except:
+                pass
             if toolchainFile is not None:
                 subprocess_args += ['-DCMAKE_TOOLCHAIN_FILE='+toolchainFile]
             subprocess_args += [projDir]
