@@ -26,6 +26,11 @@ set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.54.0 REQUIRED COMPONENTS system log filesystem thread python3)
 find_package(Threads)
 find_package(PythonLibs 3)
+find_path(STDIO_LOCATION stdio.h)
+find_path(AOUTH_LOCATION a.out.h)
+
+MESSAGE(STATUS "Find stdio.h at: " ${STDIO_LOCATION})
+MESSAGE(STATUS "Find a.out.h at: " ${AOUTH_LOCATION})
 
 set(SOURCES
     src/linkbot_wrapper.cpp
@@ -43,7 +48,9 @@ add_definitions(-DBOOST_ALL_NO_LIB=1 -DBOOST_PYTHON_SOURCE)
 target_include_directories(_linkbot
     PUBLIC
     #$<TARGET_PROPERTY:baromesh,INCLUDE_DIRECTORIES>
-    ${PYTHON_INCLUDE_DIRS})
+    ${PYTHON_INCLUDE_DIRS}
+    ${STDIO_LOCATION}
+    ${AOUTH_LOCATION})
 
 if(WIN32)
     set(suffix ".pyd")

@@ -1,3 +1,3 @@
 [submodule "LinkbotLabs-SDK"]
 	path = LinkbotLabs-SDK
-	url = git@github.com:BaroboRobotics/LinkbotLabs-SDK.git
+	url = https://github.com/BaroboRobotics/LinkbotLabs-SDK.git
