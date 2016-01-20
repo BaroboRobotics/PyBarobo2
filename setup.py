@@ -15,14 +15,14 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request as urlrequest
 
-boost_url = 'http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2'
+boost_url = 'http://downloads.sourceforge.net/project/boost/boost/1.59.0/boost_1_59_0.tar.bz2'
 if platform.system() == 'Linux':
     nanopb_url = 'http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz'
 elif platform.system() == 'Darwin':
     nanopb_url = 'http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-macosx-x86.zip'
 
 PyLinkbot_Version = '2.3.7'
-LinkbotLabs_SDK_branch = 'd2594ce2822e1e3bf7a125a0bc3d9240e97f1ec6'
+LinkbotLabs_SDK_branch = '7e18833215c4cdcc1344af8e05e89012cd2980e4'
 
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
@@ -79,8 +79,8 @@ def build_boost():
     # Download Boost
     try:
         print('Downloading and building Boost...')
-        boostFile = os.path.join(depsDir, 'boost_1_57_0.tar.bz2')
-        boostDir = os.path.join(depsDir, 'boost_1_57_0')
+        boostFile = os.path.join(depsDir, 'boost_1_59_0.tar.bz2')
+        boostDir = os.path.join(depsDir, 'boost_1_59_0')
         if not os.path.exists(boostFile):
             global boost_url
             urlrequest.urlretrieve(boost_url,
@@ -117,6 +117,9 @@ def build_boost():
         sys.exit(0)
 
 def build_nanopb():
+    if os.environ['NANOPB_ROOT']:
+        get_ll_sdk()
+        return
     # Download nanopb
     try:
         print('Downloading nanopb...')
@@ -147,6 +150,9 @@ def build_nanopb():
         print(traceback.format_exc())
         sys.exit(0)
 
+    get_ll_sdk()
+
+def get_ll_sdk():
     # Checkout the latest Linkbot Labs sdk
     try:
         print('Checking out LinkbotLabs-SDK...')
