@@ -3,4 +3,4 @@
 import linkbot
 l = linkbot.Linkbot()
 print(l.getHwVersion())
-print(l.getVersions())
+print(l.get_versions())

@@ -13,7 +13,7 @@ if __name__ == "__main__":
     time.sleep(2)
     myLinkbot.connect()
     angle = 90
-    for i in range(20):
+    for i in range(5):
         print(i)
         for _ in range(7):
             print(angle)

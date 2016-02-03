@@ -1,3 +1,8 @@
+2.3.7
+=====
+- Fixed bug on some systems when using a button event callback function.
+- Added "move_joint_accel" functions
+
 2.3.6
 =====
 - Added PEP8 compliant member function names. i.e. move_wait() instead of

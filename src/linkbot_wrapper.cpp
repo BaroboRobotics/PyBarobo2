@@ -6,14 +6,26 @@
 #include <mutex>
 #include <chrono>
 #include <queue>
+#include <string>
 #include <condition_variable>
 #include "baromesh/linkbot.hpp"
 #include <boost/filesystem.hpp>
 #include <boost/python.hpp>
+namespace py = boost::python;
+
+template<class T>
+py::list std_vector_to_py_list(const std::vector<T>& v)
+{
+    py::object get_iter = py::iterator<std::vector<T> >();
+    py::object iter = get_iter(v);
+    py::list l(iter);
+    return l;
+}
 
 void cycleDongle(int seconds);
 
 using namespace boost::python;
+using std::string;
 
 struct move_exception : std::exception
 {
@@ -112,6 +124,17 @@ class Linkbot : public barobo::Linkbot
         barobo::Linkbot::getBatteryVoltage(v);
         return v;
     }
+
+    /*
+    boost::python::list getAdcRaw2() {
+        auto vector = barobo::Linkbot::getAdcRaw();
+        boost::python::list retval;
+        for(auto i: vector) {
+            retval.append(i);
+        }
+        return retval;
+    }
+    */
 
     int getFormFactor() {
         barobo::FormFactor::Type form;
@@ -454,12 +477,35 @@ class Linkbot : public barobo::Linkbot
         template<int ...S>
         void callFunc(seq<S...>) {
             if(!cbObject.is_none()) {
-                auto params = queue.front();
-                queue.pop();
-                PyGILState_STATE gstate;
-                gstate = PyGILState_Ensure();
-                cbObject(std::get<S>(params) ...);
-                PyGILState_Release(gstate);
+                try {
+                    auto params = queue.front();
+                    queue.pop();
+                    PyGILState_STATE gstate;
+                    gstate = PyGILState_Ensure();
+                    cbObject(std::get<S>(params) ...);
+                    PyGILState_Release(gstate);
+                } catch (error_already_set &) {
+                    PyObject *ptype, *pvalue, *ptraceback;
+                    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+
+                    handle<> hType(ptype);
+                    object extype(hType);
+                    handle<> hTraceback(ptraceback);
+                    object traceback(hTraceback);
+
+                    //Extract error message
+                    string strErrorMessage = extract<string>(pvalue);
+
+                    //Extract line number (top entry of call stack)
+                    // if you want to extract another levels of call stack
+                    // also process traceback.attr("tb_next") recurently
+                    long lineno = extract<long> (traceback.attr("tb_lineno"));
+                    string filename = extract<string>(traceback.attr("tb_frame").attr("f_code").attr("co_filename"));
+                    string funcname = extract<string>(traceback.attr("tb_frame").attr("f_code").attr("co_name"));
+                    std::cout << strErrorMessage << std::endl;
+                    std::cout << filename << ":" << lineno << std::endl; 
+                }
+
             }
         }
     };

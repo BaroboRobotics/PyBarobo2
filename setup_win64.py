@@ -9,26 +9,19 @@ import setuptools
 from setuptools import setup, Extension
 import platform
 import sys
-import traceback
 if sys.version_info[0] < 3:
     import urllib as urlrequest
 else:
     import urllib.request as urlrequest
 
-boost_url = 'http://downloads.sourceforge.net/project/boost/boost/1.59.0/boost_1_59_0.tar.bz2'
-if platform.system() == 'Linux':
-    nanopb_url = 'http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz'
-elif platform.system() == 'Darwin':
-    nanopb_url = 'http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-macosx-x86.zip'
-
 PyLinkbot_Version = '2.3.7'
-LinkbotLabs_SDK_branch = '7e18833215c4cdcc1344af8e05e89012cd2980e4'
+LinkbotLabs_SDK_branch = 'd2594ce2822e1e3bf7a125a0bc3d9240e97f1ec6'
 
 projDir = os.getcwd()
 # projDir = os.path.dirname(origCWD)
 # projDir = os.path.join(os.path.dirname(origCWD), 'deps', 'baromesh')
-buildDir = os.path.join(projDir, 'build-ext-'+ platform.platform())
-stageDir = os.path.join(projDir, 'stage-'+ platform.platform())
+buildDir = os.path.join(projDir, 'build-ext-win64'+ platform.platform())
+stageDir = os.path.join(projDir, 'stage-win64'+ platform.platform())
 depsDir = os.path.join(projDir, 'deps-'+platform.platform())
 
 try:
@@ -79,11 +72,10 @@ def build_boost():
     # Download Boost
     try:
         print('Downloading and building Boost...')
-        boostFile = os.path.join(depsDir, 'boost_1_59_0.tar.bz2')
-        boostDir = os.path.join(depsDir, 'boost_1_59_0')
+        boostFile = os.path.join(depsDir, 'boost_1_57_0.tar.bz2')
+        boostDir = os.path.join(depsDir, 'boost_1_57_0')
         if not os.path.exists(boostFile):
-            global boost_url
-            urlrequest.urlretrieve(boost_url,
+            urlrequest.urlretrieve('http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2',
                 boostFile)
         if not os.path.isdir(boostDir):
             subprocess.check_call(['tar', '-C', depsDir, '-xjf', boostFile])
@@ -117,42 +109,23 @@ def build_boost():
         sys.exit(0)
 
 def build_nanopb():
-    if os.environ['NANOPB_ROOT']:
-        get_ll_sdk()
-        return
     # Download nanopb
     try:
         print('Downloading nanopb...')
-        global nanopb_url
-        filename = nanopb_url.split('/')[-1]
-        nanopbFile = os.path.join(depsDir, filename)
-        if nanopbFile.endswith('.tar.gz'):
-            basename = nanopbFile.rsplit('.', 2)[0]
-        elif nanopbFile.endswith('.zip'):
-            basename = nanopbFile.rsplit('.', 1)[0]
-        else:
-            raise RuntimeError('Unknown file extension: ' + nanopbFile)
-        nanopbDir = os.path.join(depsDir, basename)
-        print(nanopbDir)
+        nanopbFile = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86.tar.gz')
+        nanopbDir = os.path.join(depsDir, 'nanopb-0.3.1-linux-x86')
         if not os.path.exists(nanopbFile):
-            urlrequest.urlretrieve(nanopb_url,
+            urlrequest.urlretrieve('http://koti.kapsi.fi/~jpa/nanopb/download/nanopb-0.3.1-linux-x86.tar.gz',
                 nanopbFile)
         if not os.path.isdir(nanopbDir):
-            if nanopbFile.endswith('.tar.gz'):
-                subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
-            elif nanopbFile.endswith('.zip'):
-                subprocess.check_call(['unzip', '-d', depsDir, nanopbFile])
+            subprocess.check_call(['tar', '-C', depsDir, '-xzf', nanopbFile])
 
         # Set up environment variables
         os.environ['NANOPB_ROOT'] = nanopbDir
     except:
         print('Could not download/extract nanopb. Aborting build...')
-        print(traceback.format_exc())
         sys.exit(0)
 
-    get_ll_sdk()
-
-def get_ll_sdk():
     # Checkout the latest Linkbot Labs sdk
     try:
         print('Checking out LinkbotLabs-SDK...')
@@ -175,7 +148,7 @@ if platform.system() == 'Windows':
     mingw_version='49'
     # Build our C/C++ library into our tempdir staging directory
     if not os.path.exists(os.path.join(buildDir, 'Makefile')):
-        subprocess_args = [ 'cmake', projDir]
+        subprocess_args = [ 'cmake', '-G', 'Visual Studio 14 2015 Win64', projDir]
         if toolchainFile is not None:
             subprocess_args += ['-DCMAKE_TOOLCHAIN_FILE='+toolchainFile]
         subprocess.check_call(subprocess_args)

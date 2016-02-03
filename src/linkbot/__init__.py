@@ -14,6 +14,7 @@ import threading
 import multiprocessing
 import functools
 import atexit
+import math
 
 class Linkbot (_linkbot.Linkbot):
     '''
@@ -105,7 +106,7 @@ class Linkbot (_linkbot.Linkbot):
         self.__accelCb = None
         self.__encoderCb = None
         self.__jointCb = None
-        self.__buttonCb = None
+        self.__button_cb = None
         atexit.register(self._releaseCallbacks)
 
         self._formFactor = _linkbot.Linkbot._getFormFactor(self)
@@ -244,7 +245,7 @@ class Linkbot (_linkbot.Linkbot):
         return self._getJointStates()
 
     def get_hw_version(self):
-        mybytes = self.readEeprom(0x430, 3)
+        mybytes = self._readEeprom(0x430, 3)
         return (mybytes[0], mybytes[1], mybytes[2])
 
     def get_led_color(self):
@@ -253,6 +254,9 @@ class Linkbot (_linkbot.Linkbot):
     def get_serial_id(self):
         bytestream = self._readEeprom(0x412, 4)
         return bytearray(bytestream).decode()
+
+    def get_versions(self):
+        return _linkbot.Linkbot._getVersions(self)
 # Setters
     def reset(self):
         _linkbot.Linkbot._resetEncoderRevs(self)
@@ -281,7 +285,7 @@ class Linkbot (_linkbot.Linkbot):
         See :func:`Linkbot.set_joint_accelerations` and 
         :func:`Linkbot.move_smooth` .
         '''
-        self.setJointAccelerations(alpha, alpha, alpha, 1<<(joint-1))
+        self.set_joint_accelerations(alpha, alpha, alpha, 1<<(joint-1))
 
     def set_joint_accelerations(self, alpha1, alpha2, alpha3, mask=0x07):
         '''
@@ -504,6 +508,18 @@ class Linkbot (_linkbot.Linkbot):
         '''
         self._jointStates.set_moving(mask)
         _linkbot.Linkbot._move(self, mask, j1, j2, j3)
+
+    def move_joint_accel(self, joint, acceleration, angle):
+        self.move_joint_accel_nb(joint, acceleration, angle)
+        self.move_wait(mask=1<<(joint-1))
+
+    def move_joint_accel_nb(self, joint, acceleration, angle):
+        self.set_joint_acceleration(joint, acceleration)
+        timeout = math.sqrt(2*angle/acceleration)
+        self._moveAccel((1<<(joint-1)), 
+                0, timeout, Linkbot.JointStates.HOLD,
+                0, timeout, Linkbot.JointStates.HOLD,
+                0, timeout, Linkbot.JointStates.HOLD)
 
     def move_continuous(self, dir1, dir2, dir3, mask=0x07):
         '''
@@ -833,19 +849,20 @@ class Linkbot (_linkbot.Linkbot):
         :param cb: (optional) A callback function with the prototype
             cb(ButtonNo, buttonState, timestamp)
         '''
-        self.__buttonCb = cb
-        try:
+        self.__button_cb = cb
+        if hasattr(self, "buttonEventCB"):
             self._setButtonEventCallback(self.buttonEventCB)
-        except:
+        else:
             self._setButtonEventCallback(self.button_event_cb)
 
     def enable_joint_events(self, cb=None):
         self.__jointCb = cb
         self._setJointEventCallback(self.jointEventCB)
 
-    def button_event_cb(self, button_no, state, timestamp):
-        if self.__buttonCb is not None:
-            self.__buttonCb(buttonNo, state, timestamp)
+    #def button_event_cb(self, button_no, state, timestamp):
+    def button_event_cb(self, *args, **kwargs):
+        if self.__button_cb is not None:
+            self.__button_cb(*args, **kwargs)
 
     def encoder_event_cb(self, joint, angle, timestamp):
         if self.__encoderCb is not None:
